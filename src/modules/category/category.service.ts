@@ -7,9 +7,13 @@ import { CreateCategoryDTO } from './dto/create-category.dto';
 export class CategoryService {
   constructor(
     @InjectModel(Category) private readonly categoryModel: typeof Category,
-    ) { }
-    
-    async create(createCategoryDTO: CreateCategoryDTO) {
-        return await this.categoryModel.create(createCategoryDTO as any)
-    }
+  ) {}
+
+  async findAll() {
+    return await this.categoryModel.findAll();
+  }
+
+  async create(createCategoryDTO: CreateCategoryDTO) {
+    return await this.categoryModel.create(createCategoryDTO as any);
+  }
 }
