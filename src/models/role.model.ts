@@ -1,35 +1,34 @@
 import {
+  BelongsToMany,
   Column,
   DataType,
-  HasMany,
   Model,
   Table,
-  BelongsToMany,
 } from 'sequelize-typescript';
-import { User } from './user.model';
 import { Permission } from './permission.model';
-import { UserRole } from './user_role.model';
 import { RolePermission } from './role_permission.model';
+import { User } from './user.model';
+import { UserRole } from './user_role.model';
 
 @Table
 export class Role extends Model<Role> {
   @Column({ allowNull: false, unique: true, type: DataType.STRING })
-  name: string;
+  declare name: string;
 
   @Column({ allowNull: true, type: DataType.TEXT })
-  description: string;
+  declare description: string;
 
   // @HasMany(() => User)
   // users: User[]
 
   @BelongsToMany(() => User, () => UserRole)
-  users: User[];
+  declare users: User[];
 
   // @BelongsToMany(() => User, () => UserRole)
   // users: User[];
 
   @BelongsToMany(() => Permission, () => RolePermission)
-  permissions: Permission[];
+  declare permissions: Permission[];
 
   // @HasMany(() => Permission)
   // permissions: Permission[];

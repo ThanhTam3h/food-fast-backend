@@ -14,22 +14,22 @@ import { User } from './user.model';
 export class UserRole extends Model<UserRole> {
   @ForeignKey(() => User)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  userId: number;
+  declare userId: number;
 
   @ForeignKey(() => Role)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  roleId: number;
+  declare roleId: number;
 
   @ForeignKey(() => Merchant)
-  @Column({ allowNull: false, type: DataType.INTEGER })
-  merchantId: number;
+  @Column({ allowNull: true, type: DataType.INTEGER })
+  declare merchantId: number;
 
   @BelongsTo(() => User)
-  user: User;
+  declare user: User;
 
   @BelongsTo(() => Role)
-  role: Role;
+  declare role: Role;
 
   @BelongsTo(() => Merchant)
-  merchant: Merchant;
+  declare merchant: Merchant;
 }
