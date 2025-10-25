@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { User } from 'src/models';
 import { UserModule } from '../user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -16,6 +18,7 @@ import { LocalStrategy } from './passport/local.strategy';
     JwtStrategy,
     JWTAuthGuard,
   ],
-  imports: [UserModule],
+  imports: [UserModule, SequelizeModule.forFeature([User])],
+  exports: [AuthService],
 })
 export class AuthModule {}
