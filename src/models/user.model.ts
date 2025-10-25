@@ -1,60 +1,59 @@
 import {
+  BelongsToMany,
   Column,
   DataType,
   HasMany,
   HasOne,
   Model,
   Table,
-  BelongsToMany,
 } from 'sequelize-typescript';
 import { Address } from './address.model';
-import { UserRole } from './user_role.model';
 import { Cart } from './cart.model';
 import { Role } from './role.model';
+import { UserRole } from './user_role.model';
 
 @Table
 export class User extends Model<User> {
   @Column({ allowNull: false, unique: true, type: DataType.STRING })
-  email: string;
+  declare email: string;
 
   @Column({ allowNull: false, type: DataType.STRING })
-  password: string;
+  declare password: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  avatar: string;
+  declare avatar: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  phone: string;
+  declare phone: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  provider: string;
+  declare provider: string;
 
-  @Column({ defaultValue: true, type: DataType.BOOLEAN })
-  isActive: boolean;
-
-  @Column({ allowNull: true, type: DataType.STRING })
-  code_id: string;
+  @Column({ defaultValue: false, type: DataType.BOOLEAN })
+  declare isActive: boolean;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  code_expired: string;
+  declare code_id: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  reset_id: string;
+  declare code_expired: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  reset_expired: string;
+  declare reset_id: string;
+
+  @Column({ allowNull: true, type: DataType.STRING })
+  declare reset_expired: string;
 
   // Relationship
   @HasMany(() => Address)
-  addresses: Address[];
+  declare addresses: Address[];
 
   // @HasMany(() => UserRole)
   // userRoles: UserRole[];
 
   @BelongsToMany(() => Role, () => UserRole)
-  roles: Role[];
+  declare roles: Role[];
 
   @HasOne(() => Cart)
-  cart: Cart;
-
+  declare cart: Cart;
 }
