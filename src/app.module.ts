@@ -17,9 +17,9 @@ import { sequelizeConfig } from './config/sequelize.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { JWTAuthGuard } from './modules/auth/guards/jwt.guard';
 import { CategoryModule } from './modules/category/category.module';
-import { DroneModule } from './modules/drone/drone.module';
+
 import { MerchantModule } from './modules/merchant/merchant.module';
-import { ProductModule } from './modules/product/product.module';
+
 import { UserModule } from './modules/user/user.module';
 
 @Module({
@@ -34,8 +34,7 @@ import { UserModule } from './modules/user/user.module';
     MerchantModule,
     UserModule,
     AuthModule,
-    DroneModule,
-    ProductModule,
+
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],

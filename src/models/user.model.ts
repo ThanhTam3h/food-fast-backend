@@ -48,6 +48,9 @@ export class User extends Model<User> {
   @HasMany(() => Address)
   declare addresses: Address[];
 
+  @HasMany(() => UserRole)
+  declare userRoles: UserRole[];
+
   // @HasMany(() => UserRole)
   // userRoles: UserRole[];
 

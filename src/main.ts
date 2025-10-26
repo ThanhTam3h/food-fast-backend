@@ -37,6 +37,18 @@ async function bootstrap() {
     .setTitle('FastFood Delivery APIs')
     .setDescription('Build APIs for fastfood delivery website')
     .setVersion('1.0')
+    .addBearerAuth(
+      // ✅ Thêm dòng này để bật JWT trong Swagger
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        description: 'Nhập token dạng: Bearer <jwt_token>',
+        in: 'header',
+      },
+      'access-token', // Tên định danh (bạn có thể đặt khác)
+    )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/v1/docs', app, documentFactory);
