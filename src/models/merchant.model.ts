@@ -9,47 +9,47 @@ import { UserRole } from './user_role.model';
 @Table
 export class Merchant extends Model<Merchant> {
   @Column({ allowNull: false, type: DataType.STRING })
-  name: string;
+  declare name: string;
 
   @Column({ allowNull: true, type: DataType.TEXT })
-  description: string;
+  declare description: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  logo: string;
+  declare logo: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  image: string;
+  declare image: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  phone: string;
+  declare phone: string;
 
   @Column({ allowNull: true, unique: true, type: DataType.STRING })
-  email: string;
+  declare email: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  address: string;
+  declare address: string;
 
   @Column({ allowNull: true, type: DataType.GEOGRAPHY('POINT', 4326) })
-  location: string;
+  declare location: string;
 
   @Column({ defaultValue: false, type: DataType.BOOLEAN })
-  is_temporarily_closed: boolean;
+  declare is_temporarily_closed: boolean;
 
   @HasMany(() => Product)
-  products: Product[];
+  declare products: Product[];
 
   @HasMany(() => Order)
-  orders: Order[];
+  declare orders: Order[];
 
   @HasMany(() => Cart)
-  carts: Cart[];
+  declare carts: Cart[];
 
   @HasMany(() => Category)
-  categories: Category[];
+  declare categories: Category[];
 
   @HasMany(() => Topping)
-  toppings: Category[];
+  declare toppings: Category[];
 
   @HasMany(() => UserRole)
-  userRoles: UserRole[];
+  declare userRoles: UserRole[];
 }

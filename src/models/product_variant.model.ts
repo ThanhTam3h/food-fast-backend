@@ -14,30 +14,30 @@ import { Product } from './product.model';
 @Table
 export class ProductVariant extends Model<ProductVariant> {
   @Column({ allowNull: false, type: DataType.STRING })
-  name: string;
+  declare name: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  size: string;
+  declare size: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  type: string;
+  declare type: string;
 
   @Column({ allowNull: true, type: DataType.FLOAT })
-  modifiedPrice: number;
+  declare modifiedPrice: number;
 
   @Column({ defaultValue: true, type: DataType.BOOLEAN })
-  isActive: boolean;
+  declare isActive: boolean;
 
   @ForeignKey(() => Product)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  productId: number;
+  declare productId: number;
 
   @BelongsTo(() => Product)
-  product: Product;
+  declare product: Product;
 
   @HasMany(() => OrderItem)
-  orderItems: OrderItem[];
+  declare orderItems: OrderItem[];
 
   @HasMany(() => CartItem)
-  cartItems: CartItem[];
+  declare cartItems: CartItem[];
 }

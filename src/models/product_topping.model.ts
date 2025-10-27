@@ -3,32 +3,31 @@ import {
   Column,
   DataType,
   ForeignKey,
-  HasMany,
   Model,
   Table,
 } from 'sequelize-typescript';
 import { Product } from './product.model';
 import { Topping } from './topping.model';
 
-
 @Table
 export class ProductTopping extends Model<ProductTopping> {
   @ForeignKey(() => Product)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  productId: number;
+  declare productId: number;
 
   @ForeignKey(() => Topping)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  toppingId: number;
+  declare toppingId: number;
 
   @Column({ allowNull: false, type: DataType.BOOLEAN })
-  isDefault: boolean;
+  declare isDefault: boolean;
 
   @Column({ allowNull: false, type: DataType.INTEGER })
-  quantity: number;
+  declare quantity: number;
 
   @BelongsTo(() => Product)
-  product: Product;
+  declare product: Product;
 
-
+  @BelongsTo(() => Topping)
+  declare topping: Topping;
 }

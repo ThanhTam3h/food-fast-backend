@@ -18,43 +18,43 @@ import { CartItem } from './cart_item.model';
 @Table
 export class Product extends Model<Product> {
   @Column({ allowNull: false, type: DataType.STRING })
-  name: string;
+  declare name: string;
 
   @Column({ allowNull: true, type: DataType.TEXT })
-  description: string;
+  declare description: string;
 
   @Column({ allowNull: false, type: DataType.FLOAT })
-  basePrice: number;
+  declare basePrice: number;
 
   @Column({ allowNull: false, type: DataType.STRING })
-  image: string;
+  declare image: string;
 
   @Column({ defaultValue: true, type: DataType.BOOLEAN })
-  isActive: boolean;
+  declare isActive: boolean;
 
   @ForeignKey(() => Category)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  categoryId: number;
+  declare categoryId: number;
 
   @ForeignKey(() => Merchant)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  merchantId: number;
+  declare merchantId: number;
 
   @BelongsTo(() => Category)
-  category: Category[];
+  declare category: Category;
 
   @BelongsTo(() => Merchant)
-  merchant: Merchant[];
+  declare merchant: Merchant[];
 
   @HasMany(() => ProductTopping)
-  productToppings: ProductTopping[];
+  declare productToppings: ProductTopping[];
 
   @HasMany(() => ProductVariant)
-  productVariants: ProductVariant[];
+  declare productVariants: ProductVariant[];
 
   @HasMany(() => OrderItem)
-  orderItem: OrderItem[];
+  declare orderItem: OrderItem[];
 
   @HasMany(() => CartItem)
-  cartItems: CartItem[];
+  declare cartItems: CartItem[];
 }
