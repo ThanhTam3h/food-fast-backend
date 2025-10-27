@@ -14,27 +14,27 @@ import { Topping } from './topping.model';
 @Table
 export class Category extends Model<Category> {
   @Column({ allowNull: false, type: DataType.STRING })
-  name: string;
+  declare name: string;
 
   @Column({ allowNull: true, type: DataType.TEXT })
-  description: string;
+  declare description: string;
 
   @Column({ allowNull: false, type: DataType.STRING })
-  image: string;
+  declare image: string;
 
   @Column({ allowNull: false, type: DataType.BOOLEAN })
-  isActive: boolean;
+  declare isActive: boolean;
 
   @ForeignKey(() => Merchant)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  merchantId: number;
+  declare merchantId: number;
 
   @BelongsTo(() => Merchant)
-  merchant: Merchant;
+  declare merchant: Merchant;
 
   @HasMany(() => Product)
-  products: Product[];
+  declare products: Product[];
 
   @HasMany(() => Topping)
-  toppings: Topping[];
+  declare toppings: Topping[];
 }

@@ -21,6 +21,10 @@ import { CategoryModule } from './modules/category/category.module';
 import { MerchantModule } from './modules/merchant/merchant.module';
 
 import { UserModule } from './modules/user/user.module';
+import { ProductModule } from './modules/product/product.module';
+import { ToppingModule } from './modules/topping/topping.module';
+import { ProductToppingModule } from './modules/product-topping/product-topping.module';
+import { ProductVariantModule } from './modules/product-variant/product-variant.module';
 
 @Module({
   imports: [
@@ -71,6 +75,10 @@ import { UserModule } from './modules/user/user.module';
         },
       }),
     }),
+    ProductModule,
+    ToppingModule,
+    ProductToppingModule,
+    ProductVariantModule,
   ],
   providers: [
     {

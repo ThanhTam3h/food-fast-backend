@@ -15,43 +15,43 @@ import { CartItemTopping } from './cart_item_topping.model';
 @Table
 export class Topping extends Model<Topping> {
   @Column({ allowNull: false, type: DataType.STRING })
-  name: string;
+  declare name: string;
 
   @Column({ allowNull: false, type: DataType.STRING })
-  image: string;
+  declare image: string;
 
   @Column({ allowNull: true, type: DataType.TEXT })
-  description: string;
+  declare description: string;
 
   @Column({ allowNull: false, type: DataType.FLOAT })
-  price: number;
+  declare price: number;
 
   @Column({ allowNull: false, type: DataType.INTEGER })
-  quantity: number;
+  declare quantity: number;
 
   @Column({ defaultValue: true, type: DataType.BOOLEAN })
-  is_active: boolean;
+  declare is_active: boolean;
 
   @Column({ defaultValue: false, type: DataType.BOOLEAN })
-  is_required: boolean;
+  declare is_required: boolean;
 
   @ForeignKey(() => Category)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  categoryId: number;
+  declare categoryId: number;
 
   @ForeignKey(() => Merchant)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  merchantId: number;
+  declare merchantId: number;
 
   @BelongsTo(() => Category)
-  category: Category;
+  declare category: Category;
 
   @BelongsTo(() => Merchant)
-  merchant: Merchant;
+  declare merchant: Merchant;
 
   @HasMany(() => ProductTopping)
-  productToppings: ProductTopping[];
+  declare productToppings: ProductTopping[];
 
   @HasMany(() => CartItemTopping)
-  cartItemTopping: CartItemTopping[];
+  declare cartItemTopping: CartItemTopping[];
 }

@@ -13,14 +13,15 @@ async function bootstrap() {
 
   const configService = new ConfigService();
 
-  app.setGlobalPrefix("/api/v1")
+  app.setGlobalPrefix('/api/v1');
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // xóa các field dư trong payload (DTO)
-      forbidNonWhitelisted: true, // báo lỗi dư field trong payload
-      transform: true, // chuyển payload thành instance của DTO
-      // transformOptions: {enableImplicitConversion: true} // cho phép transform dữ liệu của file
+      whitelist: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true, // Cho phép ép kiểu tự động
+      },
     }),
   );
 
@@ -38,7 +39,7 @@ async function bootstrap() {
     .setDescription('Build APIs for fastfood delivery website')
     .setVersion('1.0')
     .addBearerAuth(
-      // ✅ Thêm dòng này để bật JWT trong Swagger
+      // Thêm dòng này để bật JWT trong Swagger
       {
         type: 'http',
         scheme: 'bearer',
@@ -47,7 +48,7 @@ async function bootstrap() {
         description: 'Nhập token dạng: Bearer <jwt_token>',
         in: 'header',
       },
-      'access-token', // Tên định danh (bạn có thể đặt khác)
+      'access-token', // Tên định danh
     )
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
