@@ -30,5 +30,6 @@ import { ProductService } from './product.service';
     ProductToppingModule,
     ToppingModule,
   ],
+  exports: [ProductService]
 })
 export class ProductModule {}

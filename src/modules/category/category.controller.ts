@@ -29,7 +29,6 @@ export class CategoryController {
     return this.categoryService.createCategory(createCategoryDTO);
   }
 
-  @Public()
   @Get()
   @ApiQuery({ name: 'merchantId', required: false })
   async findAll(@Query('merchantId') merchantId?: number) {
@@ -42,7 +41,6 @@ export class CategoryController {
     return await this.categoryService.findOneCategory(id);
   }
 
-  @UseGuards(JWTAuthGuard)
   @Patch(':id')
   @ApiBearerAuth('access-token')
   async update(
@@ -52,7 +50,6 @@ export class CategoryController {
     return await this.categoryService.updateCategory(id, createCategoryDTO);
   }
 
-  @UseGuards(JWTAuthGuard)
   @Delete(':id')
   @ApiBearerAuth('access-token')
   async remove(@Param('id') id: number) {

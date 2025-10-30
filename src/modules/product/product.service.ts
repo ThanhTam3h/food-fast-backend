@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
@@ -66,7 +66,7 @@ export class ProductService {
         },
         {
           model: this.modelCategory,
-          attributes: ['name'],
+          attributes: ['name', "merchantId"],
         },
       ],
       attributes: ['name', 'description', 'basePrice', 'image'],
@@ -183,9 +183,12 @@ export class ProductService {
         message: 'Tạo sản phẩm thành công',
       };
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       await transaction.rollback();
-      throw error;
+       if (error instanceof Error) {
+         throw new BadGatewayException(error.message);
+       }
+       throw new BadGatewayException('Unknown error');
     }
   }
 
@@ -279,9 +282,12 @@ export class ProductService {
         message: 'Chỉnh sửa sản phẩm thành công',
       };
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       await transaction.rollback();
-      throw error;
+       if (error instanceof Error) {
+         throw new BadGatewayException(error.message);
+       }
+       throw new BadGatewayException('Unknown error');
     }
   }
 

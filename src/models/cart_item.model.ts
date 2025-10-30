@@ -16,28 +16,28 @@ import { ProductVariant } from './product_variant.model';
 export class CartItem extends Model<CartItem> {
   @ForeignKey(() => Cart)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  cartId: number;
+  declare cartId: number;
 
   @ForeignKey(() => Product)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  productId: number;
+  declare productId: number;
 
   @ForeignKey(() => ProductVariant)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  variantId: number;
+  declare variantId: number;
 
   @Column({ allowNull: false, type: DataType.INTEGER })
-  quantity: number;
+  declare quantity: number;
 
   @BelongsTo(() => Cart)
-  cart: Cart;
+  declare cart: Cart;
 
   @BelongsTo(() => Product)
-  product: Product;
+  declare product: Product;
 
   @BelongsTo(() => ProductVariant)
-  variant: ProductVariant;
+  declare variant: ProductVariant;
 
   @HasMany(() => CartItemTopping)
-  cartItemToppings: CartItemTopping[];
+  declare cartItemToppings: CartItemTopping[];
 }
