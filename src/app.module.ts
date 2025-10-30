@@ -20,11 +20,16 @@ import { CategoryModule } from './modules/category/category.module';
 
 import { MerchantModule } from './modules/merchant/merchant.module';
 
-import { UserModule } from './modules/user/user.module';
-import { ProductModule } from './modules/product/product.module';
-import { ToppingModule } from './modules/topping/topping.module';
+import { RolesGuard } from './common/decorators/roles.guard';
+import { AddressModule } from './modules/address/address.module';
+import { CartItemToppingModule } from './modules/cart-item-topping/cart-item-topping.module';
+import { CartItemModule } from './modules/cart-item/cart-item.module';
+import { CartModule } from './modules/cart/cart.module';
 import { ProductToppingModule } from './modules/product-topping/product-topping.module';
 import { ProductVariantModule } from './modules/product-variant/product-variant.module';
+import { ProductModule } from './modules/product/product.module';
+import { ToppingModule } from './modules/topping/topping.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -79,12 +84,17 @@ import { ProductVariantModule } from './modules/product-variant/product-variant.
     ToppingModule,
     ProductToppingModule,
     ProductVariantModule,
+    CartModule,
+    CartItemModule,
+    CartItemToppingModule,
+    AddressModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
       useClass: JWTAuthGuard,
-    },
+    }, // xác thực trước
+    { provide: APP_GUARD, useClass: RolesGuard }, // phân quyền sau
   ],
 })
 export class AppModule implements NestModule {

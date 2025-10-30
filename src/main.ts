@@ -51,13 +51,13 @@ async function bootstrap() {
       'access-token', // Tên định danh
     )
     .build();
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/v1/docs', app, documentFactory);
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/v1/docs', app, document);
 
   const port = configService.get<string>('PORT') || 3000;
 
   logger.log(`Server started on ${port}`);
-  logger.log(`Swagger running on http://localhost:${port}/api/v1/docs`)
+  logger.log(`Swagger running on http://localhost:${port}/api/v1/docs`);
 
   await app.listen(port);
 }

@@ -75,4 +75,8 @@ export class ProductVariantService {
     await variant.destroy();
     return { message: 'Xóa biến thể thành công' };
   }
+
+  async findById(id: number) {
+    return await this.modelProductVariant.findByPk(id);
+  }
 }

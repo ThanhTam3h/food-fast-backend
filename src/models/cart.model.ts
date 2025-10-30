@@ -15,18 +15,18 @@ import { User } from './user.model';
 export class Cart extends Model<Cart> {
   @ForeignKey(() => User)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  userId: number;
+  declare userId: number;
 
   @ForeignKey(() => Merchant)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  merchantId: number;
+  declare merchantId: number;
 
   @BelongsTo(() => User)
-  user: User;
+  declare user: User;
 
   @BelongsTo(() => Merchant)
-  merchant: Merchant;
+  declare merchant: Merchant;
 
   @HasMany(() => CartItem)
-  cartItems: CartItem[];
+  declare cartItems: CartItem[];
 }
