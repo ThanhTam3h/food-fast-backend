@@ -13,18 +13,18 @@ import { Topping } from './topping.model';
 export class OrderItemTopping extends Model<OrderItemTopping> {
   @ForeignKey(() => OrderItem)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  orderItemId: number;
+  declare orderItemId: number;
 
   @ForeignKey(() => Topping)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  toppingId: number;
+  declare toppingId: number;
 
   @Column({ allowNull: false, type: DataType.INTEGER })
-  quantity: number;
+  declare quantity: number;
 
   @BelongsTo(() => OrderItem)
-  orderItem: OrderItem;
+  declare orderItem: OrderItem;
 
   @BelongsTo(() => Topping)
-  topping: Topping;
+  declare topping: Topping;
 }

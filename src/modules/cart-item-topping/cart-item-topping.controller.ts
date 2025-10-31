@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param } from '@nestjs/common';
 import { CartItemToppingService } from './cart-item-topping.service';
 
 @Controller('cart-topping')
-export class CartToppingController {
+export class CartItemToppingController {
   constructor(
     private readonly cartItemToppingService: CartItemToppingService,
   ) {}

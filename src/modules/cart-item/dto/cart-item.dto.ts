@@ -12,15 +12,7 @@ export class CreateCartItemDto {
 
   @ApiProperty()
   @IsOptional()
-  productVariantId: number;
-
-  @ApiProperty()
-  @IsOptional()
   quantity: number;
-
-  @ApiProperty()
-  @IsOptional()
-  userId: number;
 
   @ApiProperty()
   @IsOptional()

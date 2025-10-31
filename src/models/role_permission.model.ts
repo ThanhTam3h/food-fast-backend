@@ -6,9 +6,9 @@ import { Permission } from './permission.model';
 export class RolePermission extends Model<RolePermission> {
   @ForeignKey(() => Role)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  roleId: number;
+  declare roleId: number;
 
   @ForeignKey(() => Permission)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  permissionId: number;
+  declare permissionId: number;
 }

@@ -30,6 +30,8 @@ import { ProductVariantModule } from './modules/product-variant/product-variant.
 import { ProductModule } from './modules/product/product.module';
 import { ToppingModule } from './modules/topping/topping.module';
 import { UserModule } from './modules/user/user.module';
+import { CartPreviewModule } from './modules/cart-preview/cart-preview.module';
+import { OrderModule } from './modules/order/order.module';
 
 @Module({
   imports: [
@@ -88,6 +90,8 @@ import { UserModule } from './modules/user/user.module';
     CartItemModule,
     CartItemToppingModule,
     AddressModule,
+    CartPreviewModule,
+    OrderModule,
   ],
   providers: [
     {
