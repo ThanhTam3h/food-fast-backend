@@ -36,66 +36,66 @@ export enum PaymentStatus {
 @Table
 export class Order extends Model<Order> {
   @Column({ allowNull: false, unique: true, type: DataType.STRING })
-  orderNumber: string;
+  declare orderNumber: string;
 
   @Column({
     allowNull: false,
     type: DataType.ENUM(...Object.values(OrderStatus)),
   })
-  status: OrderStatus;
+  declare status: OrderStatus;
 
   @Column({
     allowNull: false,
     type: DataType.ENUM(...Object.values(PaymentStatus)),
   })
-  paymentStatus: PaymentStatus;
+  declare paymentStatus: PaymentStatus;
 
   @Column({
     allowNull: false,
     type: DataType.ENUM(...Object.values(PaymentMethod)),
   })
-  paymentMethod: PaymentMethod;
+  declare paymentMethod: PaymentMethod;
 
   @Column({ allowNull: false, type: DataType.FLOAT })
-  subTotal: number;
+  declare subTotal: number;
 
   @Column({ defaultValue: 0, type: DataType.FLOAT })
-  deliveryFee: number;
+  declare deliveryFee: number;
 
   @Column({ allowNull: false, type: DataType.FLOAT })
-  total: number;
+  declare total: number;
 
   @Column({ allowNull: true, type: DataType.TEXT })
-  notes: string;
+  declare notes: string;
 
   @ForeignKey(() => User)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  userId: number;
+  declare userId: number;
 
   @ForeignKey(() => Address)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  addressId: number;
+  declare addressId: number;
 
   @ForeignKey(() => Merchant)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  merchantId: number;
+  declare merchantId: number;
 
   @ForeignKey(() => Drone)
   @Column({
     allowNull: false,
     type: DataType.INTEGER,
   })
-  droneId: number;
+  declare droneId: number;
 
   @BelongsTo(() => User)
-  user: User;
+  declare user: User;
 
   @BelongsTo(() => Address)
-  address: Address;
+  declare address: Address;
 
   @BelongsTo(() => Merchant)
-  merchant: Merchant;
+  declare merchant: Merchant;
 
   @HasMany(() => OrderItem)
-  orderItems: OrderItem[];
+  declare orderItems: OrderItem[];
 }

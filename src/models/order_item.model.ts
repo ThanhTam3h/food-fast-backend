@@ -16,28 +16,28 @@ import { ProductVariant } from './product_variant.model';
 export class OrderItem extends Model<OrderItem> {
   @ForeignKey(() => Order)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  orderId: number;
+  declare orderId: number;
 
   @ForeignKey(() => Product)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  productId: number;
+  declare productId: number;
 
   @Column({ allowNull: false, type: DataType.INTEGER })
-  quantity: number;
+  declare quantity: number;
 
   @ForeignKey(() => ProductVariant)
   @Column({ allowNull: false, type: DataType.INTEGER })
-  variantId: number;
+  declare variantId: number;
 
   @BelongsTo(() => Order)
-  order: Order;
+  declare order: Order;
 
   @BelongsTo(() => Product)
-  product: Product;
+  declare product: Product;
 
   @BelongsTo(() => ProductVariant)
-  variant: ProductVariant;
+  declare variant: ProductVariant;
 
   @HasMany(() => OrderItemTopping)
-  orderItemToppings: OrderItemTopping[];
+  declare orderItemToppings: OrderItemTopping[];
 }

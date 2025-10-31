@@ -28,13 +28,14 @@ export class CartService {
     return cart;
   }
 
-  async getCartByUserId(
+  async getCartByUserIdAndMerchant(
     userId: number,
+    merchantId: number,
     transaction: any,
   ): Promise<Cart | null> {
-    return await this.modelCart.findOne({
-      where: { userId },
-      transaction,
-    });
+     return await this.modelCart.findOne({
+       where: { userId, merchantId },
+       transaction,
+     });
   }
 }

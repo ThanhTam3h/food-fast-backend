@@ -1,6 +1,5 @@
 import {
   BadGatewayException,
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -9,9 +8,8 @@ import {
   Patch,
   Post,
   Req,
-  Res,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import type { Request } from 'express';
 import { CartItemService } from './cart-item.service';
 import { CreateCartItemDto } from './dto/cart-item.dto';
 
@@ -20,6 +18,7 @@ import { JwtService } from '@nestjs/jwt';
 
 import { ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 import { Sequelize } from 'sequelize-typescript';
+import { extractUserIdFromRequest } from 'src/common/helpers/jwt';
 import { CartService } from '../cart/cart.service';
 import { actionUpdateCartItem } from './types/cartItem.type';
 
@@ -33,108 +32,93 @@ export class CartItemController {
     private readonly transaction: Sequelize,
   ) {}
 
-  @Post('/addtocart')
+  @Post('/addtocart/:merchantId')
   @ApiBearerAuth('access-token')
   async addToCart(
+    @Param('merchantId') merchantId: number,
     @Body() dataAdd: CreateCartItemDto,
-    @Res({ passthrough: true }) res: Response,
-    // @Req() req: Request,
-    // @GetUser('Topping') userId: number
+    @Req() req: Request,
   ) {
-    // let userId: number | null = null;
-
-    // const authHeader = req.headers?.authorization;
-
-    // if (authHeader && authHeader.startsWith('Bearer ')) {
-    //   try {
-    //     const token = authHeader.substring(7);
-    //     const decoded = this.JWTservice.verify(
-    //       token,
-    //       this.configService.get('JWT_SECRET'),
-    //     ) as any;
-    //     userId = decoded.Topping;
-    //   } catch (error) {
-    //     // Token invalid hoặc expired, treat as guest
-    //     userId = null;
-    //   }
-    // }
-
-    return await this.cartItemService.addToCart(dataAdd);
+    const userId = extractUserIdFromRequest(
+      req,
+      this.JWTservice,
+      this.configService,
+    );
+    return await this.cartItemService.addToCart(dataAdd, userId, merchantId);
   }
 
-  @Patch('/:cartItemId/quantity')
+
+  @Patch('/:cartItemId/quantity/:merchantId')
   @ApiBearerAuth('access-token')
-  @ApiParam({
-    name: 'cartItemId',
-    type: Number,
-  })
+  @ApiParam({ name: 'cartItemId', type: Number })
+  @ApiParam({ name: 'merchantId', type: Number })
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        action: {
-          type: 'string',
-          enum: ['increment', 'decrement'],
-        },
+        action: { type: 'string', enum: ['increment', 'decrement'] },
       },
     },
   })
   async updateQuantity(
     @Param('cartItemId') cartItemId: number,
+    @Param('merchantId') merchantId: number,
     @Body('action') action: string,
+    @Req() req: Request,
   ) {
+    const userId = extractUserIdFromRequest(
+      req,
+      this.JWTservice,
+      this.configService,
+    );
     return await this.cartItemService.increOrDecreQuantity(
       cartItemId,
       action as actionUpdateCartItem,
+      userId,
+      merchantId,
     );
   }
 
-  @Delete('/:cartItemId')
+  @Delete('/:merchantId/:cartItemId')
   @ApiBearerAuth('access-token')
-  async deleteCartItem(@Param('cartItemId') cartItemId: number) {
-    return await this.cartItemService.deleteCartItem(cartItemId);
-  }
-
-  @Get('/mergecart')
-  @ApiBearerAuth('access-token')
-  async mergeCart(
+  async deleteCartItem(
+    @Param('cartItemId') cartItemId: number,
+    @Param('merchantId') merchantId: number,
     @Req() req: Request,
-    @Res({ passthrough: true }) _res: Response,
   ) {
-    const authBearer = req.headers?.authorization;
-    if (!authBearer || !authBearer.startsWith('Bearer ')) {
-      throw new BadRequestException('Thiếu token đăng nhập!');
-    }
+    const userId = extractUserIdFromRequest(
+      req,
+      this.JWTservice,
+      this.configService,
+    );
 
-    const token = authBearer.substring(7);
-    const decoded = this.JWTservice.verify(
-      token,
-      this.configService.get('JWT_SECRET'),
-    ) as any;
-    const userId = decoded.id;
-    // const userId = (req.user as { Topping: number; role: string }).Topping;
-    return await this.cartItemService.mergeCart(userId);
+    console.log(cartItemId, userId, merchantId);
+    return await this.cartItemService.deleteCartItem(
+      cartItemId,
+      userId,
+      merchantId,
+    );
   }
 
-  @Get('/get-cartitems')
+  @Get('/get-cartitems/:merchantId')
   @ApiBearerAuth('access-token')
-  async getCartItemsByUser(@Req() req: Request) {
+  async getCartItemsByUser(
+    @Param('merchantId') merchantId: number,
+    @Req() req: Request,
+  ) {
     const transaction = await this.transaction.transaction();
-
     try {
-      const authBearer = req.headers?.authorization;
-      if (!authBearer || !authBearer.startsWith('Bearer ')) {
-        throw new BadRequestException('Thiếu token đăng nhập!');
-      }
+      const userId = extractUserIdFromRequest(
+        req,
+        this.JWTservice,
+        this.configService,
+      );
 
-      const token = authBearer.substring(7);
-      const decoded = this.JWTservice.verify(
-        token,
-        this.configService.get('JWT_SECRET'),
-      ) as any;
-      const userId = decoded.id;
-
-      const cart = await this.cartService.getCartByUserId(userId, transaction);
+      const cart = await this.cartService.getCartByUserIdAndMerchant(
+        userId,
+        merchantId,
+        transaction,
+      );
 
       if (!cart) {
         await transaction.commit();
@@ -143,6 +127,8 @@ export class CartItemController {
 
       const result = await this.cartItemService.getCartItemByCartId(
         cart.id,
+        userId,
+        merchantId,
         transaction,
       );
 
@@ -150,28 +136,8 @@ export class CartItemController {
       return result;
     } catch (error) {
       await transaction.rollback();
-      if (error instanceof Error) {
-        throw new BadGatewayException(error.message);
-      }
-      throw new BadGatewayException('Unknown error');
+      throw new BadGatewayException(error.message || 'Unknown error');
     }
   }
 
-  // @Get('by-cart/:cartId')
-  // @ApiBearerAuth('access-token')
-  // async getCartItemByCartId(
-  //   @Param('cartId') cartId: number,
-  //   @Req() req: Request,
-  // ) {
-  //   const transaction = null;
-  //   const result = await this.cartItemService.getCartItemByCartId(
-  //     cartId,
-  //     transaction,
-  //   );
-  //   return {
-  //     success: true,
-  //     message: result.message,
-  //     data: result.data,
-  //   };
-  // }
 }

@@ -11,14 +11,14 @@ import { Role } from './role.model';
 @Table
 export class Permission extends Model<Permission> {
   @Column({ allowNull: false, unique: true, type: DataType.STRING })
-  name: string;
+  declare name: string;
 
   @Column({ allowNull: true, type: DataType.TEXT })
-  description: string;
+  declare description: string;
 
   // @HasMany(() => RolePermission)
   // rolePermissions: RolePermission[];
 
   @BelongsToMany(() => Role, () => RolePermission)
-  roles: Role[];
+  declare roles: Role[];
 }
