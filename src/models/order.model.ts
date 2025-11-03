@@ -68,6 +68,9 @@ export class Order extends Model<Order> {
   @Column({ allowNull: true, type: DataType.TEXT })
   declare notes: string;
 
+  @Column({ allowNull: true, type: DataType.STRING })
+  declare stripePaymentIntentId: string;
+
   @ForeignKey(() => User)
   @Column({ allowNull: false, type: DataType.INTEGER })
   declare userId: number;
@@ -82,7 +85,7 @@ export class Order extends Model<Order> {
 
   @ForeignKey(() => Drone)
   @Column({
-    allowNull: false,
+    allowNull: true,
     type: DataType.INTEGER,
   })
   declare droneId: number;

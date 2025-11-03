@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import {
@@ -50,9 +50,9 @@ export class OrderService {
 
       const distanceResult = orderData.distance;
 
-      if (!Helper.validateDeliveryDistance(distanceResult)) {
-        throw new BadRequestException('This address is out of delivery range');
-      }
+      // if (!Helper.validateDeliveryDistance(distanceResult)) {
+      //   throw new BadRequestException('This address is out of delivery range');
+      // }
 
       const deliveryFee = Helper.caculateDeliveryFee(distanceResult);
 
@@ -94,7 +94,7 @@ export class OrderService {
         include: [
           {
             model: Address,
-            attributes: ["city", "district", "ward", "street", "location"],
+            attributes: ['city', 'district', 'ward', 'street', 'location'],
           },
           {
             model: User,
@@ -166,10 +166,9 @@ export class OrderService {
       let toppingPrice = 0;
       if (item.toppings) {
         for (const toppings of item.toppings) {
-          const topping = await this.toppingModel.findByPk(
-            toppings.toppingId,
-            { transaction },
-          );
+          const topping = await this.toppingModel.findByPk(toppings.toppingId, {
+            transaction,
+          });
 
           if (topping && topping.dataValues) {
             toppingPrice +=
@@ -214,4 +213,13 @@ export class OrderService {
       }
     }
   }
+
+  async updateOrderInfo(orderNumber: string, updateData: Partial<Order>) {
+    const order = await this.orderModel.findOne({ where: { orderNumber } });
+    if (!order) throw new NotFoundException('Order not found');
+
+    Object.assign(order, updateData);
+    await order.save();
+  }
+
 }

@@ -24,14 +24,16 @@ import { RolesGuard } from './common/decorators/roles.guard';
 import { AddressModule } from './modules/address/address.module';
 import { CartItemToppingModule } from './modules/cart-item-topping/cart-item-topping.module';
 import { CartItemModule } from './modules/cart-item/cart-item.module';
+import { CartPreviewModule } from './modules/cart-preview/cart-preview.module';
 import { CartModule } from './modules/cart/cart.module';
+import { OrderModule } from './modules/order/order.module';
 import { ProductToppingModule } from './modules/product-topping/product-topping.module';
 import { ProductVariantModule } from './modules/product-variant/product-variant.module';
 import { ProductModule } from './modules/product/product.module';
+import { StripeModule } from './modules/stripe/stripe.module';
 import { ToppingModule } from './modules/topping/topping.module';
 import { UserModule } from './modules/user/user.module';
-import { CartPreviewModule } from './modules/cart-preview/cart-preview.module';
-import { OrderModule } from './modules/order/order.module';
+
 
 @Module({
   imports: [
@@ -92,6 +94,7 @@ import { OrderModule } from './modules/order/order.module';
     AddressModule,
     CartPreviewModule,
     OrderModule,
+    StripeModule,
   ],
   providers: [
     {
@@ -106,5 +109,23 @@ export class AppModule implements NestModule {
     consumer
       .apply(StartTimingMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL });
+
+    consumer
+      .apply((req, res, next) => {
+        console.log('Stripe middleware triggered for:', req.url);
+        let data = '';
+        req.setEncoding('utf8');
+        req.on('data', (chunk) => (data += chunk));
+        req.on('end', () => {
+          req['rawBody'] = Buffer.from(data);
+          console.log('Captured rawBody length:', req['rawBody'].length);
+          next();
+        });
+      })
+      .forRoutes({
+        path: 'api/v1/stripe/webhook',
+        // path: '*',
+        method: RequestMethod.POST,
+      });
   }
 }

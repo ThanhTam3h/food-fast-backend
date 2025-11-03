@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import {
   Address,
@@ -12,6 +12,7 @@ import {
 import { AddressModule } from '../address/address.module';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
+import { StripeModule } from '../stripe/stripe.module';
 
 @Module({
   controllers: [OrderController],
@@ -27,6 +28,7 @@ import { OrderService } from './order.service';
       OrderItemTopping,
     ]),
     AddressModule,
+    forwardRef(() => StripeModule),
   ],
   exports: [OrderService],
 })
