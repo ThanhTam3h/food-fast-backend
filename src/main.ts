@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionFilter } from './common/filters/all-exception.filter';
 import { TransformInterceptor } from './common/interceptors/response.interceptor';
+import express, { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,7 +14,23 @@ async function bootstrap() {
 
   const configService = new ConfigService();
 
-  app.setGlobalPrefix('/api/v1');
+  app.setGlobalPrefix('api/v1');
+
+   app.use((req, res, next) => {
+     if (req.originalUrl === '/api/v1/stripe/webhook') {
+       // Stripe webhook cần raw body để verify chữ ký
+       express.json({
+         verify: (req: any, res, buf) => {
+           req.rawBody = buf;
+         },
+       })(req, res, next);
+     } else {
+       // Các route bình thường
+       express.json()(req, res, next);
+     }
+   });
+  
+    app.use(urlencoded({ extended: true }));
 
   app.useGlobalPipes(
     new ValidationPipe({
