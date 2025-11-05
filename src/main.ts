@@ -2,10 +2,10 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import express, { urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { AllExceptionFilter } from './common/filters/all-exception.filter';
 import { TransformInterceptor } from './common/interceptors/response.interceptor';
-import express, { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,21 +16,21 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
 
-   app.use((req, res, next) => {
-     if (req.originalUrl === '/api/v1/stripe/webhook') {
-       // Stripe webhook cần raw body để verify chữ ký
-       express.json({
-         verify: (req: any, res, buf) => {
-           req.rawBody = buf;
-         },
-       })(req, res, next);
-     } else {
-       // Các route bình thường
-       express.json()(req, res, next);
-     }
-   });
-  
-    app.use(urlencoded({ extended: true }));
+  app.use((req, res, next) => {
+    if (req.originalUrl === '/api/v1/stripe/webhook') {
+      // Stripe webhook cần raw body để verify chữ ký
+      express.json({
+        verify: (req: any, res, buf) => {
+          req.rawBody = buf;
+        },
+      })(req, res, next);
+    } else {
+      // Các route bình thường
+      express.json()(req, res, next);
+    }
+  });
+
+  app.use(urlencoded({ extended: true }));
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -46,7 +46,7 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionFilter());
 
   app.enableCors({
-    origin: 'http://localhost:5173', // URL mặc định Vite
+    origin: 'http://localhost:3001', // URL mặc định Vite
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

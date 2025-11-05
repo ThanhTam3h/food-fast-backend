@@ -24,7 +24,43 @@ export class UserService {
   }
 
   async findById(id: number) {
-    return this.userModel.findByPk(id);
+    return await this.userModel.findByPk(id);
+  }
+
+  async getProfile(userId: number) {
+    const user = await this.userModel.findByPk(userId, {
+      attributes: { exclude: ['password'] },
+      include: [
+        {
+          model: this.userRoleModel,
+          include: [
+            {
+              model: this.roleModel,
+              attributes: ['name'], // chỉ lấy tên role
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    // Lấy role (vì user có thể có nhiều userRole)
+    const roles =
+      user.userRoles?.map((ur: any) => ur.role?.name).filter(Boolean) || [];
+
+    return {
+      data: {
+        id: user.id,
+        email: user.email,
+        phone: user.phone,
+        isActive: user.isActive,
+        roles: roles, // mảng role hoặc 1 role tùy thiết kế
+        createdAt: user.createdAt,
+      },
+    };
   }
 
   async findAllUsers() {
@@ -143,6 +179,7 @@ export class UserService {
 
       return {
         message: `OTP sent to ${user.email}`,
+        data: user,
       };
     } catch (error) {
       await t.rollback();
