@@ -9,12 +9,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/common/decorators/global-guard';
 import { JWTAuthGuard } from '../auth/guards/jwt.guard';
 import { CategoryService } from './category.service';
 import { CreateCategoryDTO } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { Public } from 'src/common/decorators/global-guard';
 
 @ApiTags('Category')
 @Controller('category')
@@ -26,13 +26,14 @@ export class CategoryController {
   @ApiBearerAuth('access-token')
   @ApiBody({ type: CreateCategoryDTO })
   async create(@Body() createCategoryDTO: CreateCategoryDTO) {
-    return this.categoryService.createCategory(createCategoryDTO);
+    return await this.categoryService.createCategory(createCategoryDTO);
   }
 
+  @Public()
   @Get()
   @ApiQuery({ name: 'merchantId', required: false })
   async findAll(@Query('merchantId') merchantId?: number) {
-    return this.categoryService.findAllCategory(merchantId);
+    return await this.categoryService.findAllCategory(Number(merchantId));
   }
 
   @Public()

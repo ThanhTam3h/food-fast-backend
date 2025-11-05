@@ -16,10 +16,7 @@ export class CategoryService {
   }
 
   async findAllCategory(merchantId?: number) {
-    if (merchantId) {
-      return this.categoryModel.findAll({ where: { merchantId } });
-    }
-    return this.categoryModel.findAll();
+    return await this.categoryModel.findAll({ where: { merchantId } });
   }
 
   async findOneCategory(id: number) {

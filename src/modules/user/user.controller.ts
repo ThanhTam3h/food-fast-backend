@@ -24,6 +24,13 @@ export class UserController {
   async findById(@Param('id') id: number) {
     return this.userService.findById(id);
   }
+
+  @Public()
+  @Get('get-profile/:id')
+  async getProfile(@Param('id') id: number) {
+    return this.userService.getProfile(id);
+  }
+
   @Public()
   @Patch(':id')
   async updateUser(
