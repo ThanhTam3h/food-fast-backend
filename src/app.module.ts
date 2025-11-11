@@ -27,10 +27,10 @@ import { CartItemModule } from './modules/cart-item/cart-item.module';
 import { CartPreviewModule } from './modules/cart-preview/cart-preview.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrderModule } from './modules/order/order.module';
-import { ProductToppingModule } from './modules/product-topping/product-topping.module';
-import { ProductVariantModule } from './modules/product-variant/product-variant.module';
+import { ProductToppingGroupModule } from './modules/product-topping-group/product-topping-group.module';
 import { ProductModule } from './modules/product/product.module';
 import { StripeModule } from './modules/stripe/stripe.module';
+import { ToppingGroupModule } from './modules/topping-group/topping-group.module';
 import { ToppingModule } from './modules/topping/topping.module';
 import { UserModule } from './modules/user/user.module';
 
@@ -86,8 +86,6 @@ import { UserModule } from './modules/user/user.module';
     }),
     ProductModule,
     ToppingModule,
-    ProductToppingModule,
-    ProductVariantModule,
     CartModule,
     CartItemModule,
     CartItemToppingModule,
@@ -95,6 +93,8 @@ import { UserModule } from './modules/user/user.module';
     CartPreviewModule,
     OrderModule,
     StripeModule,
+    ToppingGroupModule,
+    ProductToppingGroupModule,
   ],
   providers: [
     {

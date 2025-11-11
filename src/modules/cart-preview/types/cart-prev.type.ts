@@ -1,18 +1,20 @@
 export type CartPreviewItem = {
-  cartItemId: string;
+  cartItemId: number;
+  productId: number;
   productName: string;
-  productVariantName: string;
-  productVariantsize: string;
-  productVarianttype: string;
-  priceProduct: number;
+  image: string | null;
   quantity: number;
+  priceProduct: number;
   toppings: Array<{
     toppingId: number;
     toppingName: string;
+    groupId: number;
     price: number;
+    quantity: number;
   }>;
   subtotal: number;
 };
+
 export type CartPreviewOutput = {
   message: string;
   data: {

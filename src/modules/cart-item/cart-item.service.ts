@@ -10,13 +10,11 @@ import {
   Cart,
   CartItem,
   CartItemTopping,
+  Merchant,
   Product,
-  ProductTopping,
-  ProductVariant,
   Topping,
 } from 'src/models';
 import { CartService } from '../cart/cart.service';
-import { ProductVariantService } from '../product-variant/product-variant.service';
 import { ProductService } from '../product/product.service';
 import { CreateCartItemDto } from './dto/cart-item.dto';
 import { actionUpdateCartItem } from './types/cartItem.type';
@@ -31,30 +29,22 @@ export class CartItemService {
     @InjectModel(Product) private readonly modelProduct: typeof Product,
     @InjectModel(Topping)
     private readonly modelTopping: typeof Topping,
-    @InjectModel(ProductVariant)
-    private readonly modelProductVariant: typeof ProductVariant,
-    @InjectModel(ProductTopping)
-    private readonly modelProductTopping: typeof ProductTopping,
-
+    @InjectModel(Merchant) private readonly modelMerchant: typeof Merchant,
     private readonly productService: ProductService,
-    private readonly productVariantService: ProductVariantService,
     private readonly cartService: CartService,
     private readonly sequelize: Sequelize,
   ) {}
-
-  async findById(id: number) {
-    return await this.modelProductVariant.findByPk(id);
-  }
 
   async addToCart(
     dataAdd: CreateCartItemDto,
     userId: number,
     merchantId: number,
   ) {
-    const { productId, variantId, quantity, toppingId } = dataAdd;
     const transaction = await this.sequelize.transaction();
 
     try {
+      const { productId, quantity, selectedToppingIds = [] } = dataAdd;
+      console.log(selectedToppingIds);
       if (quantity <= 0) {
         throw new BadGatewayException('Số lượng biến thể phải lớn hơn 0 !!!');
       }
@@ -70,12 +60,6 @@ export class CartItemService {
         throw new BadGatewayException('Sản phẩm không thuộc merchant này!');
       }
 
-      // Kiểm tra variant
-      const existedProductVariant =
-        await this.productVariantService.findById(variantId);
-      if (!existedProductVariant)
-        throw new BadGatewayException('Biến thể chưa được tìm thấy!');
-
       // Lấy hoặc tạo cart cho user + merchant
       const cart = await this.cartService.getOrCreateUserCart(
         userId,
@@ -83,14 +67,11 @@ export class CartItemService {
         transaction,
       );
 
-      const toppingIds = toppingId ?? [];
-
-      // Kiểm tra xem cartItem trùng chưa (cùng product + variant + topping)
+      // Kiểm tra xem cartItem trùng chưa (cùng product + topping)
       const matchingCartItem = await this.matchingCartItem(
         cart.id,
         productId,
-        variantId,
-        toppingIds,
+        selectedToppingIds,
       );
 
       // Nếu đã tồn tại thì tăng số lượng
@@ -102,7 +83,7 @@ export class CartItemService {
 
         await matchingCartItem.reload({ transaction });
 
-        if (toppingIds.length > 0) {
+        if (selectedToppingIds.length > 0) {
           const upQuantityCartItemTopping =
             await this.modelCartItemTopping.findAll({
               where: { cartItemId: matchingCartItem.id },
@@ -127,14 +108,13 @@ export class CartItemService {
         {
           cartId: cart.id,
           productId,
-          variantId,
           quantity,
         } as CartItem,
         { transaction },
       );
 
-      if (toppingIds.length > 0) {
-        const toppingRecords = toppingIds.map((id) => ({
+      if (selectedToppingIds.length > 0) {
+        const toppingRecords = selectedToppingIds.map((id) => ({
           cartItemId: newCartItem.id,
           toppingId: id,
           quantity,
@@ -149,10 +129,7 @@ export class CartItemService {
       return { message: 'Thêm vào giỏ hàng thành công!' };
     } catch (error) {
       await transaction.rollback();
-      if (error instanceof Error) {
-        throw new BadGatewayException(error.message);
-      }
-      throw new BadGatewayException('Unknown error');
+      throw new BadGatewayException(error.message);
     }
   }
 
@@ -245,13 +222,6 @@ export class CartItemService {
         throw new BadGatewayException('Không tìm thấy sản phẩm trong giỏ hàng');
       }
 
-      console.log(
-        cartItem.cart.userId,
-        userId,
-        cartItem.cart.merchantId,
-        merchantId,
-      );
-
       if (
         cartItem.cart.userId !== userId ||
         cartItem.cart.merchantId !== merchantId
@@ -277,14 +247,12 @@ export class CartItemService {
   async matchingCartItem(
     cartId: number,
     productId: number,
-    variantId: number,
     toppingIds: number[],
   ): Promise<CartItem | null> {
     const matchesCartItem = await this.modelCartItem.findAll({
       where: {
         cartId: cartId,
         productId: productId,
-        variantId: variantId,
       },
     });
 
@@ -311,31 +279,29 @@ export class CartItemService {
     return null;
   }
 
-  async findCartItemWithoutToppings(
-    cartId: number,
-    productId: number,
-    variantId: number,
-  ): Promise<CartItem | null> {
-    return await this.modelCartItem.findOne({
-      where: {
-        cartId: cartId,
-        productId: productId,
-        variantId: variantId,
-      },
-      include: [
-        {
-          model: this.modelCartItemTopping,
-          required: false, // LEFT JOIN
-          attributes: [],
-        },
-      ],
-      having: this.sequelize.where(
-        this.sequelize.fn('COUNT', this.sequelize.col('cartItemToppings.id')),
-        0,
-      ),
-      group: ['CartItems.id'],
-    });
-  }
+  // async findCartItemWithoutToppings(
+  //   cartId: number,
+  //   productId: number,
+  // ): Promise<CartItem | null> {
+  //   return await this.modelCartItem.findOne({
+  //     where: {
+  //       cartId: cartId,
+  //       productId: productId,
+  //     },
+  //     include: [
+  //       {
+  //         model: this.modelCartItemTopping,
+  //         required: false, // LEFT JOIN
+  //         attributes: [],
+  //       },
+  //     ],
+  //     having: this.sequelize.where(
+  //       this.sequelize.fn('COUNT', this.sequelize.col('cartItemToppings.id')),
+  //       0,
+  //     ),
+  //     group: ['CartItems.id'],
+  //   });
+  // }
 
   async getCartItemsById(idCart: number) {
     return await this.modelCartItem.findByPk(idCart);
@@ -345,23 +311,23 @@ export class CartItemService {
     cartId: number,
     userId: number,
     merchantId: number,
-    transaction: any,
+    transaction?: any,
   ): Promise<any> {
+    // Kiểm tra quyền sở hữu giỏ hàng
     const cart = await this.modelCart.findByPk(cartId);
     if (!cart || cart.userId !== userId || cart.merchantId !== merchantId) {
       throw new BadRequestException('Không có quyền truy cập giỏ hàng này');
     }
 
+    const merchant = await this.modelMerchant.findByPk(cart.merchantId);
+
+    // Lấy tất cả cart item + product + topping
     const cartItems = await this.modelCartItem.findAll({
-      where: { cartId },
+      where: { cartId: cartId },
       include: [
         {
           model: this.modelProduct,
-          attributes: ['name', 'basePrice', 'image'],
-        },
-        {
-          model: this.modelProductVariant,
-          attributes: ['id', 'name', 'size', 'type', 'modifiedPrice'],
+          attributes: ['id', 'name', 'basePrice', 'image'],
         },
         {
           model: this.modelCartItemTopping,
@@ -369,27 +335,59 @@ export class CartItemService {
           include: [
             {
               model: this.modelTopping,
-              attributes: ['name', 'description', 'image', 'price'],
+              attributes: ['id', 'name', 'price'],
             },
           ],
         },
       ],
+      order: [['createdAt', 'ASC']],
       transaction,
     });
-    const summary = cartItems.map((item) => {
-      const cartItem = item.toJSON();
-      const priceProduct =
-        cartItem.variant?.modifiedPrice ?? cartItem.product?.basePrice;
-      const toppingTotal = cartItem.cartItemToppings.reduce(
-        (sum, t) => sum + t.topping.price * t.quantity,
+
+    // Map dữ liệu và tính toán subtotal từng item
+    const items = cartItems.map((item) => {
+      const data = item.toJSON();
+
+      const productPrice = data.product?.basePrice ?? 0;
+
+      const toppingTotal = data.cartItemToppings?.reduce(
+        (sum, t) => sum + (t.topping?.price ?? 0) * t.quantity,
         0,
       );
+
+      const subTotal = (productPrice + toppingTotal) * data.quantity;
+
       return {
-        ...cartItem,
-        subTotal: (priceProduct + toppingTotal) * cartItem.quantity,
+        id: data.id,
+        quantity: data.quantity,
+        product: {
+          id: data.product?.id,
+          name: data.product?.name,
+          image: data.product?.image,
+          base_price: data.product?.basePrice,
+        },
+        toppings: data.cartItemToppings?.map((t) => ({
+          id: t.topping?.id,
+          name: t.topping?.name,
+          price: t.topping?.price,
+          quantity: t.quantity,
+        })),
+        subTotal,
       };
     });
 
-    return { message: 'Lấy giỏ hàng thành công', data: summary };
+    // Tổng cộng toàn giỏ
+    const total = items.reduce((sum, item) => sum + item.subTotal, 0);
+
+    return {
+      message: 'Lấy giỏ hàng thành công',
+      data: {
+        cartId,
+        merchantId,
+        merchantName: merchant?.name,
+        items,
+        total,
+      },
+    };
   }
 }

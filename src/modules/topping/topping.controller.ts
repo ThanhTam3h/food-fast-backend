@@ -23,40 +23,46 @@ export class ToppingController {
   @Public()
   @Post('create')
   async create(@Body() createToppingDto: CreateToppingDto): Promise<Topping> {
-    return this.toppingService.createTopping(createToppingDto);
-  }
-
-  @Public()
-  @Get()
-  async findAll(@Query('merchantId') merchantId: number): Promise<Topping[]> {
-    return this.toppingService.findAllByMerchant(merchantId);
-  }
-
-  @Public()
-  @Get(':id')
-  async findOne(
-    @Param('id') id: number,
-    @Query('merchantId') merchantId: number,
-  ): Promise<Topping> {
-    return this.toppingService.findOneTopping(id, merchantId);
+    return await this.toppingService.createTopping(createToppingDto);
   }
 
   @Public()
   @Patch(':id')
   async update(
     @Param('id') id: number,
-    @Query('merchantId') merchantId: number,
+    @Query('groupId') groupId: number,
     @Body() updateToppingDto: UpdateToppingDto,
   ): Promise<Topping> {
-    return this.toppingService.update(id, merchantId, updateToppingDto);
+    return await this.toppingService.updateTopping(
+      id,
+      groupId,
+      updateToppingDto,
+    );
   }
 
+  @Public()
   @Delete(':id')
   async remove(
     @Param('id') id: number,
-    @Query('merchantId') merchantId: number,
+    @Query('groupId') groupId: number,
   ): Promise<{ message: string }> {
-    await this.toppingService.remove(id, merchantId);
+    await this.toppingService.removeTopping(id, groupId);
     return { message: 'Đã xoá topping thành công' };
+  }
+
+  @Public()
+  @Get('group/:groupId')
+  async findByGroupByCustomer(
+    @Param('groupId') groupId: number,
+  ): Promise<Topping[]> {
+    return await this.toppingService.findByGroupByCustomer(groupId);
+  }
+
+  @Public()
+  @Get(':groupId')
+  async findByGroupByMerchant(
+    @Param('groupId') groupId: number,
+  ): Promise<Topping[]> {
+    return await this.toppingService.findByGroupByMerchant(groupId);
   }
 }

@@ -1,37 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
-export class CreateProductToppingDto {
-  @ApiProperty()
+export class CreateProductToppingGroupDto {
+  @ApiProperty({ example: 1 })
   @IsNumber()
-  toppingId: number;
-
-  @ApiProperty()
-  @IsBoolean()
-  isDefault: boolean;
-
-  @ApiProperty()
-  @IsNumber()
-  quantity: number;
-}
-
-export class CreateProductVariantDto {
-  @ApiProperty()
-  @IsString()
-  name: string;
-
-  @ApiProperty()
-  @IsString()
-  type: string;
-
-  @ApiProperty()
-  @IsString()
-  size: string;
-
-  @ApiProperty()
-  @IsNumber()
-  modifiedPrice: number;
+  toppingGroupId: number;
 }
 
 export class CreateProductDto {
@@ -43,14 +24,19 @@ export class CreateProductDto {
   @IsNumber()
   basePrice: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   description?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  image: string;
+  image?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive: boolean;
 
   @ApiProperty()
   @IsNumber()
@@ -60,15 +46,10 @@ export class CreateProductDto {
   @IsNumber()
   merchantId: number;
 
-  @ApiProperty()
+  @ApiProperty({ type: [CreateProductToppingGroupDto] })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CreateProductVariantDto)
-  productVariants: CreateProductVariantDto[];
-
-  @ApiProperty()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateProductToppingDto)
-  productToppings: CreateProductToppingDto[];
+  @Type(() => CreateProductToppingGroupDto)
+  @IsOptional()
+  productToppingGroups: CreateProductToppingGroupDto[];
 }

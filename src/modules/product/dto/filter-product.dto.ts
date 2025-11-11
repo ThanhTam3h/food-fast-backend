@@ -2,12 +2,17 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class filterProductDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
   name?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  merchantId?: number;
+
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
   categoryId?: number;
@@ -27,17 +32,7 @@ export class filterProductDto {
   @IsNumber()
   limit?: number;
 
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  sortOrder?: string;
-
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
   minPrice?: number;

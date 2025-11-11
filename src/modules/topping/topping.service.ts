@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
-import { Topping } from 'src/models';
+import { Topping, ToppingGroup } from 'src/models';
 import { CreateToppingDto } from './dto/create-topping.dto';
 import { UpdateToppingDto } from './dto/update-topping.dto';
 
@@ -10,21 +10,68 @@ export class ToppingService {
   constructor(
     @InjectModel(Topping)
     private readonly modelTopping: typeof Topping,
+    @InjectModel(ToppingGroup)
+    private readonly modelToppingGroup: typeof ToppingGroup,
   ) {}
 
-  // Tìm topping theo id & merchantId (đảm bảo bảo mật)
-  async findOneTopping(id: number, merchantId: number) {
-    const result = await this.modelTopping.findOne({
-      where: { id, merchantId },
-    });
-    if (!result)
-      throw new BadRequestException(
-        'Topping không tồn tại hoặc không thuộc về merchant này',
-      );
-    return result;
+  // Thêm topping vào nhóm topping
+  async createTopping(createToppingDto: CreateToppingDto): Promise<Topping> {
+    const group = await this.modelToppingGroup.findByPk(
+      createToppingDto.topping_group_id,
+    );
+    if (!group) throw new BadRequestException('Nhóm topping không tồn tại');
+    return await this.modelTopping.create(createToppingDto as any);
   }
 
-  // Kiểm tra danh sách topping có tồn tại (dùng trong order)
+  // Cập nhật topping vào nhóm topping
+  async updateTopping(
+    id: number,
+    topping_group_id: number,
+    updateToppingDto: UpdateToppingDto,
+  ): Promise<Topping> {
+    const topping = await this.findOneTopping(id, topping_group_id);
+    return await topping.update(updateToppingDto as any);
+  }
+
+  // Xóa topping
+  async removeTopping(id: number, topping_group_id: number): Promise<void> {
+    const topping = await this.findOneTopping(id, topping_group_id);
+    return await topping.destroy();
+  }
+
+  //  Tìm topping
+  async findOneTopping(id: number, topping_group_id: number): Promise<Topping> {
+    const topping = await this.modelTopping.findOne({
+      where: { id, topping_group_id },
+    });
+
+    if (!topping)
+      throw new BadRequestException('Topping không tồn tại hoặc sai merchant');
+    return topping;
+  }
+
+  // Xem danh sách topping theo nhóm (Public)
+  async findByGroupByCustomer(topping_group_id: number): Promise<Topping[]> {
+    return this.modelTopping.findAll({
+      where: { topping_group_id, is_active: true },
+      order: [
+        ['is_default', 'DESC'],
+        ['name', 'ASC'],
+      ],
+    });
+  }
+
+  async findByGroupByMerchant(topping_group_id: number): Promise<Topping[]> {
+    return this.modelTopping.findAll({
+      where: { topping_group_id },
+      order: [
+        ['is_default', 'DESC'],
+        ['name', 'ASC'],
+      ],
+    });
+  }
+
+  // Kiểm tra danh sách topping có tồn tại
   async existedTopping(toppingsId: number[]) {
     const result = await this.modelTopping.findAll({
       where: { id: { [Op.in]: toppingsId } },
@@ -40,38 +87,5 @@ export class ToppingService {
         `Topping với id ${idNotExisted.join(', ')} không tồn tại!`,
       );
     }
-  }
-
-  // Tạo topping mới (merchantId phải truyền vào DTO)
-  async createTopping(createToppingDto: CreateToppingDto) {
-    if (!createToppingDto.merchantId)
-      throw new BadRequestException('Thiếu merchantId');
-    return this.modelTopping.create(createToppingDto as any);
-  }
-
-  // Lấy tất cả topping của merchant
-  async findAllByMerchant(merchantId: number): Promise<Topping[]> {
-    return this.modelTopping.findAll({
-      where: { merchantId },
-      include: { all: true },
-      order: [['createdAt', 'DESC']],
-    });
-  }
-
-  // Cập nhật topping (chỉ merchant chủ sở hữu được phép)
-  async update(
-    id: number,
-    merchantId: number,
-    updateToppingDto: UpdateToppingDto,
-  ): Promise<Topping> {
-    const topping = await this.findOneTopping(id, merchantId);
-    await topping.update(updateToppingDto as any);
-    return topping;
-  }
-
-  // Xoá topping (merchant phải đúng)
-  async remove(id: number, merchantId: number): Promise<void> {
-    const topping = await this.findOneTopping(id, merchantId);
-    await topping.destroy();
   }
 }

@@ -9,7 +9,6 @@ import {
 } from 'sequelize-typescript';
 import { Merchant } from './merchant.model';
 import { Product } from './product.model';
-import { Topping } from './topping.model';
 
 @Table
 export class Category extends Model<Category> {
@@ -34,7 +33,4 @@ export class Category extends Model<Category> {
 
   @HasMany(() => Product)
   declare products: Product[];
-
-  @HasMany(() => Topping)
-  declare toppings: Topping[];
 }

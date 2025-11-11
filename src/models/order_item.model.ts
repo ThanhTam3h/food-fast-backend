@@ -10,7 +10,6 @@ import {
 import { Order } from './order.model';
 import { OrderItemTopping } from './order_item_topping.model';
 import { Product } from './product.model';
-import { ProductVariant } from './product_variant.model';
 
 @Table
 export class OrderItem extends Model<OrderItem> {
@@ -25,18 +24,11 @@ export class OrderItem extends Model<OrderItem> {
   @Column({ allowNull: false, type: DataType.INTEGER })
   declare quantity: number;
 
-  @ForeignKey(() => ProductVariant)
-  @Column({ allowNull: false, type: DataType.INTEGER })
-  declare variantId: number;
-
   @BelongsTo(() => Order)
   declare order: Order;
 
   @BelongsTo(() => Product)
   declare product: Product;
-
-  @BelongsTo(() => ProductVariant)
-  declare variant: ProductVariant;
 
   @HasMany(() => OrderItemTopping)
   declare orderItemToppings: OrderItemTopping[];

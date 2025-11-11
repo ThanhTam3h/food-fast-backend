@@ -95,7 +95,6 @@ export class StripeService {
 
     await this.orderService.updateOrderInfo(orderNumber, {
       paymentStatus: PaymentStatus.PAID,
-      status: OrderStatus.PREPARING,
       stripePaymentIntentId: paymentIntentId,
     } as any);
 

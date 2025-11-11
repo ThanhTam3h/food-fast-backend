@@ -10,10 +10,9 @@ import {
 import { Category } from './category.model';
 import { Merchant } from './merchant.model';
 import { OrderItem } from './order_item.model';
-import { ProductTopping } from './product_topping.model';
-import { ProductVariant } from './product_variant.model';
 
 import { CartItem } from './cart_item.model';
+import { ProductToppingGroup } from './product_topping_group.model';
 
 @Table
 export class Product extends Model<Product> {
@@ -46,11 +45,8 @@ export class Product extends Model<Product> {
   @BelongsTo(() => Merchant)
   declare merchant: Merchant[];
 
-  @HasMany(() => ProductTopping)
-  declare productToppings: ProductTopping[];
-
-  @HasMany(() => ProductVariant)
-  declare productVariants: ProductVariant[];
+  @HasMany(() => ProductToppingGroup)
+  productToppingGroups: ProductToppingGroup[];
 
   @HasMany(() => OrderItem)
   declare orderItem: OrderItem[];

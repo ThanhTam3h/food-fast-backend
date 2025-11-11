@@ -8,15 +8,10 @@ export class CreateCartItemDto {
 
   @ApiProperty()
   @IsOptional()
-  variantId: number;
-
-  @ApiProperty()
-  @IsOptional()
   quantity: number;
 
-  @ApiProperty()
-  @IsOptional()
+  @ApiProperty({ example: [1, 3, 5], required: false })
   @IsArray()
-  @IsNumber({}, { each: true })
-  toppingId?: number[];
+  @IsOptional()
+  selectedToppingIds?: number[];
 }

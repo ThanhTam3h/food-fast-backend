@@ -5,6 +5,7 @@ import { Order } from './order.model';
 import { Product } from './product.model';
 import { Topping } from './topping.model';
 import { UserRole } from './user_role.model';
+import { ToppingGroup } from './topping_group.model';
 
 @Table
 export class Merchant extends Model<Merchant> {
@@ -47,8 +48,8 @@ export class Merchant extends Model<Merchant> {
   @HasMany(() => Category)
   declare categories: Category[];
 
-  @HasMany(() => Topping)
-  declare toppings: Category[];
+  @HasMany(() => ToppingGroup)
+  toppingGroups: ToppingGroup[];
 
   @HasMany(() => UserRole)
   declare userRoles: UserRole[];

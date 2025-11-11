@@ -12,8 +12,6 @@ import { OrderItem } from 'src/models/order_item.model';
 import { OrderItemTopping } from 'src/models/order_item_topping.model';
 import { Permission } from 'src/models/permission.model';
 import { Product } from 'src/models/product.model';
-import { ProductTopping } from 'src/models/product_topping.model';
-import { ProductVariant } from 'src/models/product_variant.model';
 import { Role } from 'src/models/role.model';
 import { RolePermission } from 'src/models/role_permission.model';
 import { Shipment } from 'src/models/shipment.model';
@@ -21,7 +19,12 @@ import { Topping } from 'src/models/topping.model';
 import { User } from 'src/models/user.model';
 import { UserRole } from 'src/models/user_role.model';
 
-import { Drone, DroneTelemetry } from 'src/models';
+import {
+  Drone,
+  DroneTelemetry,
+  ProductToppingGroup,
+  ToppingGroup,
+} from 'src/models';
 
 export const sequelizeConfig = (
   configService: ConfigService,
@@ -37,19 +40,19 @@ export const sequelizeConfig = (
   synchronize: true,
   models: [
     // Cha
+    Topping,
     User,
     Merchant,
     Role,
     Permission,
     Category,
     Product,
-    Topping,
+    ToppingGroup,
+    ProductToppingGroup,
     Order,
     Cart,
     Shipment,
     Address,
-    ProductVariant,
-    ProductTopping,
     UserRole,
     RolePermission,
     OrderItem,

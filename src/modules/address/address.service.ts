@@ -3,6 +3,7 @@ import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
 import { Address } from 'src/models';
 import { InjectModel } from '@nestjs/sequelize';
+import { TemporaryAddressDto } from '../cart-preview/dto/checkout.dto';
 
 @Injectable()
 export class AddressService {
@@ -11,7 +12,7 @@ export class AddressService {
     private readonly addressModel: typeof Address,
   ) {}
 
-  async create(userId: number, createAddressDto: CreateAddressDto) {
+  async create(userId: number, createAddressDto: CreateAddressDto | TemporaryAddressDto) {
     const newAddress = await this.addressModel.create({
       ...createAddressDto,
       userId,

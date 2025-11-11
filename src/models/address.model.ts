@@ -12,17 +12,17 @@ import { User } from './user.model';
 
 @Table
 export class Address extends Model<Address> {
-  @Column({ allowNull: true, type: DataType.STRING })
+  @Column({ allowNull: false, type: DataType.STRING })
   declare street: string;
 
-  @Column({ allowNull: false, type: DataType.STRING })
-  declare city: string;
+  // @Column({ allowNull: false, type: DataType.STRING })
+  // declare city: string;
 
-  @Column({ allowNull: false, type: DataType.STRING })
-  declare district: string;
+  // @Column({ allowNull: false, type: DataType.STRING })
+  // declare district: string;
 
-  @Column({ allowNull: true, type: DataType.STRING })
-  declare ward: string;
+  // @Column({ allowNull: true, type: DataType.STRING })
+  // declare ward: string;
 
   @Column({ allowNull: true, type: DataType.GEOGRAPHY('POINT', 4326) })
   declare location: string;

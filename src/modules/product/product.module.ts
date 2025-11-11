@@ -3,14 +3,11 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import {
   Category,
   Product,
-  ProductTopping,
-  ProductVariant,
+  ProductToppingGroup,
   Topping,
+  ToppingGroup,
 } from 'src/models';
 import { CategoryModule } from '../category/category.module';
-import { ProductToppingModule } from '../product-topping/product-topping.module';
-import { ProductVariantModule } from '../product-variant/product-variant.module';
-import { ToppingModule } from '../topping/topping.module';
 import { ProductController } from './product.controller';
 import { ProductService } from './product.service';
 
@@ -20,15 +17,12 @@ import { ProductService } from './product.service';
   imports: [
     SequelizeModule.forFeature([
       Category,
-      ProductTopping,
-      ProductVariant,
       Product,
       Topping,
+      ToppingGroup,
+      ProductToppingGroup,
     ]),
     CategoryModule,
-    ProductVariantModule,
-    ProductToppingModule,
-    ToppingModule,
   ],
   exports: [ProductService]
 })

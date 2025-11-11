@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
 import { isOtpExpired } from 'src/common/helpers/functions';
@@ -26,7 +30,10 @@ export class AuthService {
     });
     return {
       message: 'Login successfully',
-      data: { accessToken: accessToken },
+      data: {
+        accessToken: accessToken,
+        user: { id: id, email: email, role: role },
+      },
     };
   }
 

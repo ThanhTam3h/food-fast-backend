@@ -1,40 +1,38 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsBoolean,
+  IsInt,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
+  Min,
 } from 'class-validator';
 
-export class CreateProductVariantDto {
+export class CreateToppingGroupDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
   name: string;
 
   @ApiProperty()
-  @IsString()
-  @IsOptional()
-  size?: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsOptional()
-  type?: string;
-
-  @ApiProperty()
-  @IsNumber()
-  @IsOptional()
-  modifiedPrice: number;
-
-  @ApiProperty()
   @IsBoolean()
   @IsOptional()
-  isActive?: boolean;
+  is_required?: boolean;
 
   @ApiProperty()
-  @IsNumber()
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  minSelection?: number;
+
+  @ApiProperty()
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  maxSelection?: number;
+
+  @ApiProperty()
+  @IsInt()
   @IsNotEmpty()
-  productId: number;
+  merchantId: number;
 }

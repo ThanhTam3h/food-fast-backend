@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -49,7 +50,7 @@ export class ProductController {
   }
 
   @Public()
-  @Put('/update/:id')
+  @Patch('/update/:id')
   async updateProduct(
     @Param('id') id: number,
     @Body() updateData: UpdateProductDto,

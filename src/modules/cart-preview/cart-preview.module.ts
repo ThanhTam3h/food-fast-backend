@@ -6,8 +6,6 @@ import {
   CartItem,
   CartItemTopping,
   Product,
-  ProductTopping,
-  ProductVariant,
   Topping,
 } from 'src/models';
 import { AddressModule } from '../address/address.module';
@@ -25,8 +23,6 @@ import { CartPreviewService } from './cart-preview.service';
       CartItem,
       CartItemTopping,
       Product,
-      ProductTopping,
-      ProductVariant,
       Topping,
       Address,
     ]),

@@ -1,19 +1,19 @@
-import { BadGatewayException, BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import {
+  BadGatewayException,
+  BadRequestException,
+  Injectable,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import {
   Category,
   Product,
-  ProductTopping,
-  ProductVariant,
+  ProductToppingGroup,
   Topping,
+  ToppingGroup,
 } from 'src/models';
 import { CategoryService } from '../category/category.service';
-import { ProductToppingService } from '../product-topping/product-topping.service';
-import { ProductVariantService } from '../product-variant/product-variant.service';
-import { ToppingService } from '../topping/topping.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { filterProductDto } from './dto/filter-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -22,327 +22,284 @@ import { UpdateProductDto } from './dto/update-product.dto';
 export class ProductService {
   constructor(
     @InjectModel(Product) private readonly modelProduct: typeof Product,
-    @InjectModel(ProductVariant)
-    private readonly modelProductVariant: typeof ProductVariant,
-    @InjectModel(ProductTopping)
-    private readonly modelProductTopping: typeof ProductTopping,
+    @InjectModel(ToppingGroup)
+    private readonly modelToppingGroup: typeof ToppingGroup,
+    @InjectModel(ProductToppingGroup)
+    private readonly modelProductToppingGroup: typeof ProductToppingGroup,
     @InjectModel(Topping) private readonly modelTopping: typeof Topping,
     @InjectModel(Category) private readonly modelCategory: typeof Category,
-    private readonly configService: ConfigService,
-    private readonly productVariantService: ProductVariantService,
-    private readonly toppingService: ToppingService,
-    private readonly productToppingService: ProductToppingService,
     private readonly categoryService: CategoryService,
     private readonly sequelize: Sequelize,
   ) {}
 
   async findOneProductById(id: number) {
-    const result = await this.modelProduct.findByPk(id, {
+    const result = await this.modelProduct.findOne({
+      where: { id, isActive: true },
+
       include: [
         {
-          model: this.modelProductVariant,
-          attributes: {
-            include: [
-              [
-                Sequelize.literal(
-                  '"Product"."basePrice" + "productVariants"."modifiedPrice"',
-                ),
-                'variantPrice',
-              ],
-            ],
-          },
-        },
-        {
-          model: this.modelProductTopping,
-          attributes: {
-            exclude: ['createdAt', 'updatedAt', 'productId'],
-          },
+          model: this.modelProductToppingGroup,
           include: [
             {
-              model: this.modelTopping,
-              attributes: ['name', 'description', 'image', 'price'],
+              model: this.modelToppingGroup,
+              include: [
+                {
+                  model: this.modelTopping,
+                  attributes: ['id', 'name', 'price'],
+                  where: { is_active: true },
+                  required: false,
+                },
+              ],
+              attributes: [
+                'id',
+                'name',
+                'is_required',
+                'minSelection',
+                'maxSelection',
+              ],
             },
           ],
         },
         {
           model: this.modelCategory,
-          attributes: ['name', "merchantId"],
+          attributes: ['name', 'merchantId'],
         },
       ],
-      attributes: ['name', 'description', 'basePrice', 'image'],
+      attributes: ['id', 'name', 'description', 'basePrice', 'image'],
     });
     return result;
   }
 
-  async createProduct(productDto: CreateProductDto) {
-    const transaction = await this.sequelize.transaction();
-    try {
-      const alreadyExistedCategory = await this.categoryService.findOneCategory(
-        productDto.categoryId,
-      );
-      if (!alreadyExistedCategory)
-        throw new BadRequestException(
-          'Category ứng với product chưa được tìm thấy!',
-        );
-
-      const payload: Record<string, any> = {
-        name: productDto.name,
-        basePrice: productDto.basePrice,
-        image: productDto.image,
-        categoryId: productDto.categoryId,
-        merchantId: productDto.merchantId, // Added to match model
-      };
-
-      if (productDto.description) payload.description = productDto.description;
-
-      const newProduct = await this.modelProduct.create(payload as any, {
-        transaction,
-      });
-
-      if (newProduct && (newProduct.id || newProduct.dataValues.id)) {
-        const productId = newProduct.id || newProduct.dataValues.id;
-
-        const variantKeys = productDto.productVariants.map(
-          (v) => `${v.size}-${v.type}`,
-        );
-        const existedKeysVariant = new Set(variantKeys);
-
-        if (variantKeys.length !== existedKeysVariant.size) {
-          throw new BadRequestException(
-            'Có một vài biến thể bị trùng lặp size và type',
-          );
-        }
-
-        for (const variant of productDto.productVariants) {
-          const existedVariantDB =
-            await this.productVariantService.existedProductVanriantDB(
-              productId,
-              variant.size,
-              variant.type,
-            );
-
-          if (existedVariantDB) {
-            throw new BadRequestException(
-              `Variant với size "${variant.size}" và type "${variant.type}" đã tồn tại cho sản phẩm này!`,
-            );
-          }
-        }
-
-        const productVariants = productDto.productVariants.map((item) => ({
-          ...item,
-          productId,
-        }));
-        await this.modelProductVariant.bulkCreate(productVariants as any, {
-          transaction,
-        });
-      }
-
-      if (newProduct && (newProduct.id || newProduct.dataValues.id)) {
-        const productId = newProduct.id || newProduct.dataValues.id;
-
-        const toppingIds = productDto.productToppings.map(
-          (topping) => topping.toppingId,
-        );
-        const existedIdToppings = new Set(toppingIds);
-
-        const alreadyExisted = await this.modelTopping.findAll({
-          where: {
-            id: {
-              [Op.in]: toppingIds,
-            },
-          },
-        });
-        if (alreadyExisted.length <= 0) {
-          throw new BadRequestException(
-            'Có một vài món topping chưa được tìm thấy',
-          );
-        }
-
-        const finalProductTopping = new Map();
-        productDto.productToppings.forEach((topping) => {
-          const key = topping.toppingId;
-
-          if (finalProductTopping.has(key)) {
-            const foundKey = finalProductTopping.get(key);
-            foundKey.quantity += topping.quantity;
-          } else {
-            finalProductTopping.set(key, {
-              ...topping,
-              productId,
-            });
-          }
-        });
-        const productTopping = Array.from(finalProductTopping.values());
-        await this.modelProductTopping.bulkCreate(productTopping as any, {
-          transaction,
-        });
-      }
-
-      await transaction.commit();
-      return {
-        message: 'Tạo sản phẩm thành công',
-      };
-    } catch (error) {
-      // console.log(error);
-      await transaction.rollback();
-       if (error instanceof Error) {
-         throw new BadGatewayException(error.message);
-       }
-       throw new BadGatewayException('Unknown error');
-    }
-  }
-
-  async updateProduct(id: number, productDto: UpdateProductDto) {
-    const transaction = await this.sequelize.transaction();
-    try {
-      const alreadyExistedProduct = await this.findOneProductById(id);
-      if (!alreadyExistedProduct)
-        throw new BadRequestException('Sản phẩm chưa được tìm thấy!');
-
-      const whereClause: Record<string, any> = {};
-      if (productDto.name) whereClause.name = productDto.name;
-      if (productDto.description)
-        whereClause.description = productDto.description;
-      if (productDto.image) whereClause.image = productDto.image;
-      if (productDto.categoryId) {
-        const alreadyExistedCategory =
-          await this.categoryService.findOneCategory(
-            productDto.categoryId as any,
-          );
-        if (!alreadyExistedCategory)
-          throw new BadRequestException(
-            'Category ứng với product chưa được tìm thấy!',
-          );
-        whereClause.categoryId = productDto.categoryId;
-      }
-      if (productDto.basePrice) whereClause.basePrice = productDto.basePrice;
-      if (productDto.merchantId) whereClause.merchantId = productDto.merchantId; // Added to match model
-      await this.modelProduct.update(whereClause, {
-        where: { id },
-        transaction,
-        individualHooks: true,
-      });
-
-      if (productDto.productVariants && productDto.productVariants.length > 0) {
-        for (const variantDto of productDto.productVariants) {
-          if (variantDto.id) {
-            if (variantDto.id <= 0) {
-              throw new BadRequestException('Id của biến thể phải lớn hơn 0');
-            }
-            await this.productVariantService.findOneProductVariant(
-              variantDto.id,
-              id,
-            );
-            await this.modelProductVariant.update(
-              {
-                name: variantDto.name,
-                type: variantDto.type,
-                size: variantDto.size,
-                modifiedPrice: variantDto.modifiedPrice,
-              },
-              { where: { id: variantDto.id }, transaction },
-            );
-          }
-        }
-      }
-
-      if (productDto.productToppings && productDto.productToppings.length > 0) {
-        const productToppingIds = productDto.productToppings.map(
-          (topping) => topping.id,
-        );
-        await this.productToppingService.existedProductTopping(
-          productToppingIds as number[],
-        );
-
-        const toppingIds = productDto.productToppings.map(
-          (topping) => topping.toppingId,
-        );
-        await this.toppingService.existedTopping(toppingIds as number[]);
-        for (const productToppingDto of productDto.productToppings) {
-          if (productToppingDto.id) {
-            await this.modelProductTopping.update(
-              {
-                quantity: productToppingDto.quantity,
-                isDefault: productToppingDto.isDefault,
-                toppingId: productToppingDto.toppingId,
-              },
-              {
-                where: {
-                  id: productToppingDto.id,
-                },
-                transaction,
-              },
-            );
-          }
-        }
-      }
-
-      await transaction.commit();
-      return {
-        message: 'Chỉnh sửa sản phẩm thành công',
-      };
-    } catch (error) {
-      // console.log(error);
-      await transaction.rollback();
-       if (error instanceof Error) {
-         throw new BadGatewayException(error.message);
-       }
-       throw new BadGatewayException('Unknown error');
-    }
-  }
-
-  async findAllProducts(filterSearch: filterProductDto) {
-    const {
-      name,
-      categoryId,
-      isActive,
-      page,
-      limit,
-      sortBy,
-      sortOrder,
-      minPrice,
-      maxPrice,
-    } = filterSearch;
-    const whereClause: Record<string, any> = {};
-
-    if (name !== undefined) {
-      whereClause.name = {
-        [Op.iLike]: `%${name}%`,
-      };
-    }
-    if (categoryId !== undefined) whereClause.categoryId = categoryId;
-    whereClause.isActive = true;
-
-    const currentPage = Number(page || 1);
-    const limitPage = Number(
-      limit || this.configService.get('LIMIT_PAGE') || 10,
+  calculateTotalPrice(
+    basePrice: number,
+    selectedToppings: { price: number }[],
+  ) {
+    const toppingTotal = selectedToppings.reduce(
+      (acc, topping) => acc + topping.price,
+      0,
     );
-    const offsetPage = Number(currentPage - 1) * limitPage;
+    return basePrice + toppingTotal;
+  }
 
-    if (minPrice !== undefined || maxPrice !== undefined) {
-      whereClause.basePrice = {};
-      if (minPrice !== undefined) whereClause.basePrice[Op.gte] = minPrice;
-      if (maxPrice !== undefined) whereClause.basePrice[Op.lte] = maxPrice;
+  async previewPrice(productId: number, selectedToppingIds: number[]) {
+    const product = await this.findOneProductById(productId);
+
+    if (!product) {
+      throw new BadGatewayException('Không tìm thấy sản phẩm');
     }
 
-    let orderClause: any[];
-    if (sortBy !== undefined) {
-      orderClause = [[sortBy, sortOrder || 'DESC']];
-    } else {
-      orderClause = [['createdAt', 'DESC']];
+    // --- Gom tất cả topping của sản phẩm ---
+    const allToppings =
+      product?.productToppingGroups?.flatMap(
+        (group) => group?.toppingGroup?.toppings || [],
+      ) || [];
+    
+    console.log('Gom tất cả topping của sản phẩm', allToppings);
+
+    // --- Lọc topping người dùng chọn ---
+    const selectedToppings = allToppings.filter((t) =>
+      selectedToppingIds.includes(t.id),
+    );
+
+    console.log("Lọc:", selectedToppingIds)
+
+    // --- Validate theo nhóm topping ---
+    for (const group of product?.productToppingGroups || []) {
+      const groupToppings = group?.toppingGroup?.toppings || [];
+      const chosenInGroup = groupToppings.filter((t) =>
+        selectedToppingIds.includes(t.id),
+      );
+
+      const { name, is_required, minSelection, maxSelection } =
+        group?.toppingGroup || {};
+
+      if (is_required && chosenInGroup.length === 0) {
+        throw new BadRequestException(`Nhóm ${name} là bắt buộc phải chọn`);
+      }
+
+      if (minSelection && chosenInGroup.length < minSelection) {
+        throw new BadRequestException(
+          `Nhóm ${name}: phải chọn ít nhất ${minSelection} topping`,
+        );
+      }
+
+      if (maxSelection && chosenInGroup.length > maxSelection) {
+        throw new BadRequestException(
+          `Nhóm ${name}: không được chọn quá ${maxSelection} topping`,
+        );
+      }
     }
+
+    // --- Tính tổng giá ---
+    const total = this.calculateTotalPrice(product.basePrice, selectedToppings);
+
+    // --- Trả về dữ liệu ---
+    return {
+      product: {
+        id: product.id,
+        name: product.name,
+        basePrice: product.basePrice,
+        image: product.image,
+      },
+      toppings: selectedToppings,
+      totalPrice: total,
+    };
+  }
+
+  async createProduct(dto: CreateProductDto) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const category = await this.categoryService.findOneCategory(
+        dto.categoryId,
+      );
+      if (!category)
+        throw new BadRequestException('Không tìm thấy danh mục sản phẩm');
+
+      const product = await this.modelProduct.create(
+        {
+          name: dto.name,
+          description: dto.description,
+          basePrice: dto.basePrice,
+          image: dto.image,
+          isActive: dto.isActive,
+          categoryId: dto.categoryId,
+          merchantId: dto.merchantId,
+        } as Product,
+        { transaction },
+      );
+
+      if (dto.productToppingGroups && dto.productToppingGroups.length > 0) {
+        const groupIds = dto.productToppingGroups.map((g) => g.toppingGroupId);
+
+        const existedGroups = await this.modelToppingGroup.findAll({
+          where: { id: { [Op.in]: groupIds } },
+        });
+        if (existedGroups.length !== groupIds.length)
+          throw new BadRequestException('Có nhóm topping không tồn tại');
+
+        const mapping = groupIds.map((gid) => ({
+          productId: product.id,
+          toppingGroupId: gid,
+        }));
+
+        await this.modelProductToppingGroup.bulkCreate(mapping as any, {
+          transaction,
+        });
+      }
+
+      await transaction.commit();
+      return { message: 'Tạo sản phẩm thành công', data: product };
+    } catch (err) {
+      await transaction.rollback();
+      throw new BadGatewayException(err.message);
+    }
+  }
+
+  async updateProduct(id: number, dto: UpdateProductDto) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const product = await this.modelProduct.findByPk(id);
+      if (!product) throw new BadRequestException('Không tìm thấy sản phẩm');
+
+      await this.modelProduct.update(
+        {
+          name: dto.name ?? product.name,
+          description: dto.description ?? product.description,
+          image: dto.image ?? product.image,
+          basePrice: dto.basePrice ?? product.basePrice,
+          isActive: dto.isActive,
+          categoryId: dto.categoryId ?? product.categoryId,
+          merchantId: dto.merchantId,
+        },
+        { where: { id }, transaction },
+      );
+
+      if (dto.productToppingGroups) {
+        await this.modelProductToppingGroup.destroy({
+          where: { productId: id },
+          transaction,
+        });
+
+        if (dto.productToppingGroups.length > 0) {
+          const groupIds = dto.productToppingGroups.map(
+            (g) => g.toppingGroupId,
+          );
+          const mapping = groupIds.map((gid) => ({
+            product_id: id,
+            toppingGroupId: gid,
+          }));
+          await this.modelProductToppingGroup.bulkCreate(mapping as any, {
+            transaction,
+          });
+        }
+      }
+
+      await transaction.commit();
+      return { message: 'Cập nhật sản phẩm thành công' };
+    } catch (err) {
+      await transaction.rollback();
+      throw new BadGatewayException(err.message);
+    }
+  }
+
+  async findAllProducts(filter: filterProductDto) {
+    const where: any = {};
+    const { name, categoryId, isActive, minPrice, maxPrice, merchantId } =
+      filter;
+
+    if (name) where.name = { [Op.iLike]: `%${name}%` };
+    if (categoryId) where.categoryId = categoryId;
+    if (merchantId) where.merchantId = merchantId;
+    if (typeof isActive === 'boolean') where.isActive = isActive;
+    if (minPrice || maxPrice)
+      where.basePrice = {
+        ...(minPrice && { [Op.gte]: minPrice }),
+        ...(maxPrice && { [Op.lte]: maxPrice }),
+      };
+
+    const page = filter.page ?? 1;
+    const limit = filter.limit ?? 10;
+    const offset = (page - 1) * limit;
 
     const result = await this.modelProduct.findAndCountAll({
-      where: whereClause,
-      limit: limitPage,
-      offset: offsetPage,
-      order: orderClause,
-      raw: true,
+      where,
+      limit,
+      offset,
+      attributes: ['id', 'name', 'basePrice', 'description', 'image', 'isActive'],
+      include: [
+        {
+          model: this.modelProductToppingGroup,
+          include: [
+            {
+              model: this.modelToppingGroup,
+              include: [
+                {
+                  model: this.modelTopping,
+                  attributes: ['id', 'name', 'price'],
+                  where: { is_active: true },
+                  required: false,
+                },
+              ],
+              attributes: [
+                'id',
+                'name',
+                'is_required',
+                'minSelection',
+                'maxSelection',
+              ],
+            },
+          ],
+        },
+        {
+          model: this.modelCategory,
+          attributes: ['id', 'name', 'merchantId'],
+        },
+      ],
     });
 
     return {
       totalRecords: result.count,
-      page: currentPage,
+      page,
       numberData: result.rows.length,
       data: result.rows,
     };

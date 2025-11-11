@@ -10,20 +10,26 @@ import {
 } from 'class-validator';
 
 export class TemporaryAddressDto {
-  @ApiProperty({ example: 'Hà Nội' })
-  @IsString()
-  @Type(() => String)
-  city: string;
+  // @ApiProperty({ example: 'Hà Nội' })
+  // @IsString()
+  // @Type(() => String)
+  // city: string;
 
-  @ApiProperty({ example: 'Phường Bách Khoa' })
-  @IsString()
-  @Type(() => String)
-  ward: string;
+  // @ApiProperty({ example: 'Phường Bách Khoa' })
+  // @IsString()
+  // @Type(() => String)
+  // ward: string;
 
-  @ApiProperty({ example: 'Quận Hai Bà Trưng' })
+  // @ApiProperty({ example: 'Quận Hai Bà Trưng' })
+  // @IsString()
+  // @Type(() => String)
+  // district: string;
+
+  @ApiProperty({ example: '273 An Dương Vương Quận 5' })
   @IsString()
+  @IsNotEmpty()
   @Type(() => String)
-  district: string;
+  street: string;
 
   @ApiProperty({
     example: { type: 'Point', coordinates: [105.8412, 21.0245] },
@@ -34,8 +40,6 @@ export class TemporaryAddressDto {
     type: 'Point';
     coordinates: [number, number]; // [longitude, latitude]
   };
-
-
 }
 
 export class CheckoutCaculateDto {

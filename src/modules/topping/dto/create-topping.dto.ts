@@ -2,26 +2,17 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateToppingDto {
-  @ApiProperty()
+  @ApiProperty({ example: 'Thêm phô mai' })
   @IsString()
   name: string;
 
-  @ApiProperty()
-  @IsString()
-  image: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @ApiProperty()
+  @ApiProperty({ example: 10000 })
   @IsNumber()
   price: number;
 
   @ApiProperty()
   @IsNumber()
-  quantity: number;
+  topping_group_id: number;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -31,13 +22,5 @@ export class CreateToppingDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsBoolean()
-  is_required?: boolean;
-
-  @ApiProperty()
-  @IsNumber()
-  categoryId: number;
-
-  @ApiProperty()
-  @IsNumber()
-  merchantId: number;
+  is_default?: boolean;
 }

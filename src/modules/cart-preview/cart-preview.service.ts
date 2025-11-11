@@ -1,20 +1,17 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op } from 'sequelize';
-import { Sequelize } from 'sequelize-typescript';
+import { Helper } from 'src/common/helpers/helper';
 import {
   Address,
   Cart,
   CartItem,
   CartItemTopping,
   Product,
-  ProductVariant,
   Topping,
 } from 'src/models';
-import { AddressService } from '../address/address.service';
 import { CheckoutCaculateDto } from './dto/checkout.dto';
-import { CartCheckoutOutput, CartPreviewItem, CartPreviewOutput } from './types/cart-prev.type';
-import { Helper } from 'src/common/helpers/helper';
+import { CartCheckoutOutput, CartPreviewOutput } from './types/cart-prev.type';
 
 @Injectable()
 export class CartPreviewService {
@@ -23,13 +20,9 @@ export class CartPreviewService {
     @InjectModel(Cart) private cartModel: typeof Cart,
     @InjectModel(CartItemTopping)
     private cartItemToppingModel: typeof CartItemTopping,
-    @InjectModel(ProductVariant)
-    private productVariantModel: typeof ProductVariant,
     @InjectModel(Topping) private toppingModel: typeof Topping,
     @InjectModel(Address) private addressModel: typeof Address,
     @InjectModel(Product) private productModel: typeof Product,
-    private readonly addressService: AddressService,
-    private readonly sequelize: Sequelize,
   ) {}
 
   async cartPreview(
@@ -38,38 +31,25 @@ export class CartPreviewService {
     cartItemIds: number[],
     transaction: any,
   ): Promise<CartPreviewOutput> {
-    // Tìm giỏ hàng của user cho merchant đó
     const cart = await this.cartModel.findOne({
-      where: {
-        userId,
-        merchantId,
-      },
+      where: { userId, merchantId },
       transaction,
     });
-
     if (!cart) {
       throw new BadRequestException(
-        'Không tìm thấy giỏ hàng cho cửa hàng này.',
+        'Không tìm thấy giỏ hàng của merchant này.',
       );
     }
 
-    // Lấy danh sách item trong cart (hoặc lọc theo cartItemIds nếu có)
-    const whereClause: any = { cartId: cart.id };
-    if (cartItemIds && cartItemIds.length > 0) {
-      whereClause.id = { [Op.in]: cartItemIds };
-    }
+    const where: any = { cartId: cart.id };
+    if (cartItemIds?.length) where.id = { [Op.in]: cartItemIds };
 
     const cartItems = await this.cartItemModel.findAll({
-      where: whereClause,
+      where,
       include: [
         {
           model: this.productModel,
-          attributes: ['id', 'name', 'basePrice', 'image', 'merchantId'],
-          where: { merchantId },
-        },
-        {
-          model: this.productVariantModel,
-          attributes: ['id', 'name', 'size', 'type', 'modifiedPrice'],
+          attributes: ['id', 'name', 'basePrice', 'image'],
         },
         {
           model: this.cartItemToppingModel,
@@ -77,7 +57,7 @@ export class CartPreviewService {
           include: [
             {
               model: this.toppingModel,
-              attributes: ['id', 'name', 'price'],
+              attributes: ['id', 'name', 'price', 'topping_group_id'],
             },
           ],
         },
@@ -85,74 +65,30 @@ export class CartPreviewService {
       transaction,
     });
 
-    if (!cartItems.length) {
-      throw new BadRequestException(
-        'Giỏ hàng trống hoặc không có sản phẩm hợp lệ.',
-      );
-    }
+    if (!cartItems.length)
+      throw new BadRequestException('Giỏ hàng trống hoặc không hợp lệ.');
 
-    // Xử lý từng item
-    // const previewItems: CartPreviewItem[] = cartItems.map((item) => {
-    //   const product = item.product;
-    //   const variant = item.variant;
-    //   const toppings = item.cartItemToppings || [];
-
-    //   const toppingTotal = toppings.reduce(
-    //     (sum, t) => sum + (t.topping?.price || 0) * (t.quantity || 1),
-    //     0,
-    //   );
-
-    //   const basePrice = variant?.modifiedPrice ?? product?.basePrice ?? 0;
-
-    //   const subtotal = (basePrice + toppingTotal) * item.quantity;
-
-    //   return {
-    //     cartItemId: item.id,
-    //     productName: product.name,
-    //     productVariantName: variant?.name ?? null,
-    //     productVariantsize: variant?.size ?? null,
-    //     productVarianttype: variant?.type ?? null,
-    //     priceProduct: basePrice,
-    //     quantity: item.quantity,
-    //     toppings: toppings.map((t) => ({
-    //       toppingId: t.topping.id,
-    //       toppingName: t.topping.name,
-    //       price: t.topping.price,
-    //     })),
-    //     subtotal,
-    //   };
-    // });
-
-    // Xử lý từng item
-    const previewItems: CartPreviewItem[] = cartItems.map((item) => {
+    const items = cartItems.map((item) => {
       const product = item.product;
-      const variant = item.variant;
-      const toppings = item.cartItemToppings || [];
+      const toppings = item.cartItemToppings ?? [];
 
-      // Tính tổng topping
       const toppingTotal = toppings.reduce(
         (sum, t) => sum + (t.topping?.price || 0) * (t.quantity || 1),
         0,
       );
-
-      // modifiedPrice là giá cộng thêm → cộng với basePrice
-      const basePrice =
-        (product?.basePrice || 0) + (variant?.modifiedPrice || 0);
-
-      // Tổng phụ cho 1 item (đã nhân theo quantity)
-      const subtotal = (basePrice + toppingTotal) * item.quantity;
+      const subtotal = (product.basePrice + toppingTotal) * item.quantity;
 
       return {
         cartItemId: item.id,
+        productId: product.id,
         productName: product.name,
-        productVariantName: variant?.name ?? null,
-        productVariantsize: variant?.size ?? null,
-        productVarianttype: variant?.type ?? null,
-        priceProduct: basePrice,
+        image: product.image,
         quantity: item.quantity,
+        priceProduct: product.basePrice,
         toppings: toppings.map((t) => ({
           toppingId: t.topping.id,
           toppingName: t.topping.name,
+          groupId: t.topping.topping_group_id,
           price: t.topping.price,
           quantity: t.quantity,
         })),
@@ -160,14 +96,12 @@ export class CartPreviewService {
       };
     });
 
-    // Tổng tiền
-    const totalAmount = previewItems.reduce((sum, i) => sum + i.subtotal, 0);
+    const totalAmount = items.reduce((sum, i) => sum + i.subtotal, 0);
 
-    // Trả kết quả
     return {
       message: 'Xem trước giỏ hàng thành công.',
       data: {
-        items: previewItems,
+        items,
         totalAmount,
       },
     };

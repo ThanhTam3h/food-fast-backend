@@ -1,13 +1,12 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { CartItemService } from './cart-item.service';
-import { CartItemController } from './cart-item.controller';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { Cart, CartItemTopping, Merchant, Product, Topping } from 'src/models';
 import { CartItem } from 'src/models/cart_item.model';
-import { Cart, CartItemTopping, Product, ProductTopping, ProductVariant, Topping } from 'src/models';
-import { ProductModule } from '../product/product.module';
-import { ProductVariantModule } from '../product-variant/product-variant.module';
 import { CartItemToppingModule } from '../cart-item-topping/cart-item-topping.module';
 import { CartModule } from '../cart/cart.module';
+import { ProductModule } from '../product/product.module';
+import { CartItemController } from './cart-item.controller';
+import { CartItemService } from './cart-item.service';
 
 @Module({
   controllers: [CartItemController],
@@ -17,16 +16,14 @@ import { CartModule } from '../cart/cart.module';
       CartItem,
       Cart,
       Product,
-      ProductVariant,
       CartItemTopping,
-      ProductTopping,
       Topping,
+      Merchant,
     ]),
     SequelizeModule,
-    forwardRef(() =>ProductModule),
-    forwardRef(() =>ProductVariantModule),
-    forwardRef(() =>CartItemToppingModule),
-    forwardRef(() =>CartModule),
+    forwardRef(() => ProductModule),
+    forwardRef(() => CartItemToppingModule),
+    forwardRef(() => CartModule),
   ],
   exports: [CartItemService],
 })

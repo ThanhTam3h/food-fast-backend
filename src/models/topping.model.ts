@@ -7,51 +7,34 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript';
-import { Category } from './category.model';
-import { Merchant } from './merchant.model';
-import { ProductTopping } from './product_topping.model';
 import { CartItemTopping } from './cart_item_topping.model';
+import { OrderItemTopping } from './order_item_topping.model';
+import { ToppingGroup } from './topping_group.model';
 
 @Table
 export class Topping extends Model<Topping> {
   @Column({ allowNull: false, type: DataType.STRING })
   declare name: string;
 
-  @Column({ allowNull: false, type: DataType.STRING })
-  declare image: string;
-
-  @Column({ allowNull: true, type: DataType.TEXT })
-  declare description: string;
-
   @Column({ allowNull: false, type: DataType.FLOAT })
   declare price: number;
-
-  @Column({ allowNull: false, type: DataType.INTEGER })
-  declare quantity: number;
 
   @Column({ defaultValue: true, type: DataType.BOOLEAN })
   declare is_active: boolean;
 
   @Column({ defaultValue: false, type: DataType.BOOLEAN })
-  declare is_required: boolean;
+  declare is_default: boolean;
 
-  @ForeignKey(() => Category)
-  @Column({ allowNull: false, type: DataType.INTEGER })
-  declare categoryId: number;
+  @ForeignKey(() => ToppingGroup)
+  @Column({ type: DataType.INTEGER, allowNull: false })
+  declare topping_group_id: number;
 
-  @ForeignKey(() => Merchant)
-  @Column({ allowNull: false, type: DataType.INTEGER })
-  declare merchantId: number;
-
-  @BelongsTo(() => Category)
-  declare category: Category;
-
-  @BelongsTo(() => Merchant)
-  declare merchant: Merchant;
-
-  @HasMany(() => ProductTopping)
-  declare productToppings: ProductTopping[];
+  @BelongsTo(() => ToppingGroup)
+  declare topping_group: ToppingGroup;
 
   @HasMany(() => CartItemTopping)
-  declare cartItemTopping: CartItemTopping[];
+  declare cart_item_toppings: CartItemTopping[];
+
+  @HasMany(() => OrderItemTopping)
+  declare order_item_toppings: OrderItemTopping[];
 }

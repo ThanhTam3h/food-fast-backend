@@ -1,20 +1,19 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
+import { Helper } from 'src/common/helpers/helper';
 import {
   Address,
   Order,
   OrderItem,
   OrderItemTopping,
   Product,
-  ProductVariant,
   Topping,
   User,
 } from 'src/models';
+import { OrderStatus, PaymentStatus } from 'src/models/order.model';
 import { AddressService } from '../address/address.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { Helper } from 'src/common/helpers/helper';
-import { OrderStatus, PaymentStatus } from 'src/models/order.model';
 
 @Injectable()
 export class OrderService {
@@ -24,53 +23,184 @@ export class OrderService {
     @InjectModel(OrderItemTopping)
     private readonly orderItemToppingModel: typeof OrderItemTopping,
     @InjectModel(Address) private readonly addressModel: typeof Address,
-    @InjectModel(ProductVariant)
-    private readonly productVariantModel: typeof ProductVariant,
     @InjectModel(Product) private readonly productModel: typeof Product,
     @InjectModel(Topping) private readonly toppingModel: typeof Topping,
     private readonly addressService: AddressService,
     private readonly sequelize: Sequelize,
   ) {}
 
+  // async createOrder(orderData: CreateOrderDto): Promise<Order> {
+  //   const transaction = await this.sequelize.transaction();
+
+  //   try {
+  //     const newAddress = await this.addressService.create(
+  //       orderData.userId,
+  //       orderData.temporaryAddress,
+  //     );
+
+  //     const addressId = newAddress.id;
+
+  //     const distanceResult = orderData.distance;
+
+  //     // if (!Helper.validateDeliveryDistance(distanceResult)) {
+  //     //   throw new BadRequestException('This address is out of delivery range');
+  //     // }
+
+  //     const deliveryFee = Helper.caculateDeliveryFee(distanceResult);
+
+  //     const subTotal = await this.caculateSubtotal(
+  //       orderData.orderItems,
+  //       transaction,
+  //     );
+
+  //     const total = subTotal + deliveryFee;
+
+  //     const orderNumber = await Helper.generateOrderNumber();
+
+  //     const newOrder = await this.orderModel.create(
+  //       {
+  //         orderNumber,
+  //         userId: orderData.userId,
+  //         merchantId: orderData.merchantId,
+  //         addressId,
+  //         status: OrderStatus.PENDING,
+  //         paymentStatus: PaymentStatus.PENDING,
+  //         paymentMethod: orderData.paymentMethod,
+  //         subTotal,
+  //         deliveryFee,
+  //         total,
+  //         notes: orderData.note || null,
+  //       } as Order,
+  //       { transaction },
+  //     );
+
+  //     await this.createOrderItems(
+  //       newOrder.id,
+  //       orderData.orderItems,
+  //       transaction,
+  //     );
+
+  //     await transaction.commit();
+
+  //     return (await this.orderModel.findByPk(newOrder.id, {
+  //       include: [
+  //         {
+  //           model: Address,
+  //           attributes: ['street', 'location'],
+  //         },
+  //         {
+  //           model: User,
+  //           attributes: ['email', 'phone'],
+  //         },
+  //         {
+  //           model: OrderItem,
+  //           include: [
+  //             {
+  //               model: Product,
+  //               attributes: ['name', 'basePrice', 'image'],
+  //             },
+  //             {
+  //               model: OrderItemTopping,
+  //               include: [
+  //                 {
+  //                   model: Topping,
+  //                   attributes: ['name', 'price'],
+  //                 },
+  //               ],
+  //             },
+  //           ],
+  //         },
+  //       ],
+  //     })) as Order;
+  //   } catch (error) {
+  //     console.log(error.message);
+  //     await transaction.rollback();
+  //     throw error;
+  //   }
+  // }
+
+  // async caculateSubtotal(
+  //   orderItems: CreateOrderDto['orderItems'],
+  //   transaction: any,
+  // ): Promise<number> {
+  //   let subToal = 0;
+
+  //   for (const item of orderItems) {
+  //     let productPrice = 0;
+  //     const product = await this.productModel.findByPk(item.productId, {
+  //       transaction,
+  //     });
+  //     let toppingPrice = 0;
+  //     if (item.toppings) {
+  //       for (const toppings of item.toppings) {
+  //         const topping = await this.toppingModel.findByPk(toppings.toppingId, {
+  //           transaction,
+  //         });
+
+  //         if (topping && topping.dataValues) {
+  //           toppingPrice +=
+  //             (topping?.dataValues?.price || 0) * toppings.quantity;
+  //         }
+  //       }
+  //     }
+
+  //     subToal += (productPrice + toppingPrice) * item.quantity;
+  //   }
+
+  //   return subToal;
+  // }
+
   async createOrder(orderData: CreateOrderDto): Promise<Order> {
     const transaction = await this.sequelize.transaction();
 
     try {
-      const address = await this.addressModel.findByPk(orderData.addressId, {
-        transaction,
-      });
-      if (!address) {
-        throw new BadRequestException('Address not found');
-      }
-      if (address.userId !== orderData.userId) {
-        throw new BadRequestException(
-          'This address does not belong to this user',
-        );
-      }
-
-      const distanceResult = orderData.distance;
-
-      // if (!Helper.validateDeliveryDistance(distanceResult)) {
-      //   throw new BadRequestException('This address is out of delivery range');
-      // }
-
-      const deliveryFee = Helper.caculateDeliveryFee(distanceResult);
-
-      const subTotal = await this.caculateSubtotal(
-        orderData.orderItems,
-        transaction,
+      // 1️⃣ Tạo address mới
+      const newAddress = await this.addressService.create(
+        orderData.userId,
+        orderData.temporaryAddress,
       );
+      const addressId = newAddress.id;
+
+      // 2️⃣ Tính phí giao hàng
+      const deliveryFee = Helper.caculateDeliveryFee(orderData.distance);
+
+      // 3️⃣ Tính subtotal
+      let subTotal = 0;
+      for (const item of orderData.orderItems) {
+        const product = await this.productModel.findByPk(item.productId, {
+          transaction,
+        });
+        if (!product)
+          throw new BadRequestException(`Product ${item.productId} not found`);
+
+        let toppingPrice = 0;
+        if (item.toppings) {
+          for (const toppingItem of item.toppings) {
+            const topping = await this.toppingModel.findByPk(
+              toppingItem.toppingId,
+              { transaction },
+            );
+            if (!topping)
+              throw new BadRequestException(
+                `Topping ${toppingItem.toppingId} not found`,
+              );
+            toppingPrice += (topping.price || 0) * toppingItem.quantity;
+          }
+        }
+
+        subTotal += (product.basePrice + toppingPrice) * item.quantity;
+      }
 
       const total = subTotal + deliveryFee;
 
+      // 4️⃣ Tạo order
       const orderNumber = await Helper.generateOrderNumber();
-
       const newOrder = await this.orderModel.create(
         {
           orderNumber,
           userId: orderData.userId,
           merchantId: orderData.merchantId,
-          addressId: orderData.addressId,
+          addressId,
           status: OrderStatus.PENDING,
           paymentStatus: PaymentStatus.PENDING,
           paymentMethod: orderData.paymentMethod,
@@ -82,52 +212,54 @@ export class OrderService {
         { transaction },
       );
 
-      await this.createOrderItems(
-        newOrder.id,
-        orderData.orderItems,
-        transaction,
-      );
+      // 5️⃣ Tạo order items & toppings
+      for (const item of orderData.orderItems) {
+        const orderItem = await this.orderItemModel.create(
+          {
+            orderId: newOrder.id,
+            productId: item.productId,
+            quantity: item.quantity,
+          } as OrderItem,
+          { transaction },
+        );
+
+        if (item.toppings) {
+          for (const toppingItem of item.toppings) {
+            await this.orderItemToppingModel.create(
+              {
+                orderItemId: orderItem.id,
+                toppingId: toppingItem.toppingId,
+                quantity: toppingItem.quantity,
+              } as OrderItemTopping,
+              { transaction },
+            );
+          }
+        }
+      }
 
       await transaction.commit();
 
+      // 6️⃣ Trả về order với relation
       return (await this.orderModel.findByPk(newOrder.id, {
         include: [
-          {
-            model: Address,
-            attributes: ['city', 'district', 'ward', 'street', 'location'],
-          },
-          {
-            model: User,
-            attributes: ['email', 'phone'],
-          },
+          { model: Address, attributes: ['street', 'location'] },
+          { model: User, attributes: ['email', 'phone'] },
           {
             model: OrderItem,
             include: [
-              {
-                model: Product,
-                attributes: ['name', 'basePrice', 'image'],
-              },
-              {
-                model: ProductVariant,
-                attributes: ['name', 'size', 'type', 'modifiedPrice'],
-              },
+              { model: Product, attributes: ['name', 'basePrice', 'image'] },
               {
                 model: OrderItemTopping,
-                include: [
-                  {
-                    model: Topping,
-                    attributes: ['name', 'price'],
-                  },
-                ],
+                include: [{ model: Topping, attributes: ['name', 'price'] }],
               },
             ],
           },
         ],
       })) as Order;
     } catch (error) {
-      console.log(error.message);
       await transaction.rollback();
-      throw error;
+      console.error('Create order error:', error);
+      throw new BadRequestException(error.message);
     }
   }
 
@@ -135,52 +267,46 @@ export class OrderService {
     orderItems: CreateOrderDto['orderItems'],
     transaction: any,
   ): Promise<number> {
-    let subToal = 0;
+    let subTotal = 0;
+
+    console.log(orderItems);
 
     for (const item of orderItems) {
-      let productPrice = 0;
+      console.log(item.productId);
+      // Lấy product
       const product = await this.productModel.findByPk(item.productId, {
         transaction,
       });
-      if (item.variantId) {
-        const productVariant = await this.productVariantModel.findByPk(
-          item.variantId,
-          { transaction },
-        );
 
-        if (
-          product &&
-          product.dataValues &&
-          productVariant &&
-          productVariant.dataValues
-        ) {
-          productPrice =
-            product?.dataValues?.basePrice +
-            productVariant?.dataValues?.modifiedPrice;
-        }
-      } else {
-        if (product && product.dataValues) {
-          productPrice = product?.dataValues?.basePrice;
-        }
+      console.log(product);
+      if (!product) {
+        throw new Error(`Product with id ${item.productId} not found`);
       }
+
+      const productPrice = product.basePrice || 0;
+
+      // Tính topping
       let toppingPrice = 0;
       if (item.toppings) {
-        for (const toppings of item.toppings) {
-          const topping = await this.toppingModel.findByPk(toppings.toppingId, {
-            transaction,
-          });
-
-          if (topping && topping.dataValues) {
-            toppingPrice +=
-              (topping?.dataValues?.price || 0) * toppings.quantity;
+        for (const toppingItem of item.toppings) {
+          const topping = await this.toppingModel.findByPk(
+            toppingItem.toppingId,
+            { transaction },
+          );
+          if (!topping) {
+            throw new Error(
+              `Topping with id ${toppingItem.toppingId} not found`,
+            );
           }
+          toppingPrice += (topping.price || 0) * toppingItem.quantity;
         }
       }
 
-      subToal += (productPrice + toppingPrice) * item.quantity;
+      // Tính subtotal cho item
+      subTotal += (productPrice + toppingPrice) * item.quantity;
     }
 
-    return subToal;
+    return subTotal;
   }
 
   async createOrderItems(
@@ -193,7 +319,6 @@ export class OrderService {
         {
           orderId,
           productId: item.productId,
-          variantId: item.variantId,
           quantity: item.quantity,
         } as OrderItem,
         { transaction },

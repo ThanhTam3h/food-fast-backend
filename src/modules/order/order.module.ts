@@ -6,7 +6,6 @@ import {
   OrderItem,
   OrderItemTopping,
   Product,
-  ProductVariant,
   Topping,
 } from 'src/models';
 import { AddressModule } from '../address/address.module';
@@ -22,7 +21,6 @@ import { StripeModule } from '../stripe/stripe.module';
       Order,
       Address,
       OrderItem,
-      ProductVariant,
       Product,
       Topping,
       OrderItemTopping,

@@ -92,7 +92,6 @@ export class CartItemController {
       this.configService,
     );
 
-    console.log(cartItemId, userId, merchantId);
     return await this.cartItemService.deleteCartItem(
       cartItemId,
       userId,
