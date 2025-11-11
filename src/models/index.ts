@@ -4,7 +4,6 @@ export { CartItem } from './cart_item.model';
 export { CartItemTopping } from './cart_item_topping.model';
 export { Category } from './category.model';
 export { Drone } from './drone.model';
-export { DroneTelemetry } from './drone_telemetry.model';
 export { Merchant } from './merchant.model';
 export { Order } from './order.model';
 export { OrderItem } from './order_item.model';
@@ -15,8 +14,9 @@ export { ProductTopping } from './product_topping.model';
 export { ProductToppingGroup } from './product_topping_group.model';
 export { Role } from './role.model';
 export { RolePermission } from './role_permission.model';
-export { Shipment } from './shipment.model';
 export { Topping } from './topping.model';
 export { ToppingGroup } from './topping_group.model';
 export { User } from './user.model';
 export { UserRole } from './user_role.model';
+export { DroneHub } from './drone_hub.model'
+export { MerchantImage } from './merchant_image.model';

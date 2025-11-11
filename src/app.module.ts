@@ -33,6 +33,7 @@ import { StripeModule } from './modules/stripe/stripe.module';
 import { ToppingGroupModule } from './modules/topping-group/topping-group.module';
 import { ToppingModule } from './modules/topping/topping.module';
 import { UserModule } from './modules/user/user.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 
 
 @Module({
@@ -95,6 +96,7 @@ import { UserModule } from './modules/user/user.module';
     StripeModule,
     ToppingGroupModule,
     ProductToppingGroupModule,
+    CloudinaryModule,
   ],
   providers: [
     {

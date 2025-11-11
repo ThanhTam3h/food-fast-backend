@@ -1,176 +1,68 @@
-import { HttpService } from '@nestjs/axios';
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { firstValueFrom } from 'rxjs';
-import { Merchant, User, UserRole } from 'src/models';
+import { Merchant } from 'src/models/merchant.model';
+import {
+  MerchantImage,
+  MerchantImageType,
+} from 'src/models/merchant_image.model';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CreateMerchantDto } from './dto/create-merchant.dto';
-import { UpdateMerchantDto } from './dto/update-merchant.dto';
 
 @Injectable()
 export class MerchantService {
   constructor(
-    private readonly httpService: HttpService,
-    @InjectModel(Merchant) private merchantModel: typeof Merchant,
-    @InjectModel(UserRole) private userRoleModel: typeof UserRole,
-    @InjectModel(User) private userModel: typeof User,
+    @InjectModel(Merchant)
+    private readonly merchantModel: typeof Merchant,
+
+    @InjectModel(MerchantImage)
+    private readonly merchantImageModel: typeof MerchantImage,
+
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async getCoordinatesFromAddress(address: string) {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-      address,
-    )}&format=json&limit=1`;
+  /**
+   * filesByType: {
+   *   IDENTITY?: File[],
+   *   BUSINESS?: File[],
+   *   KITCHEN?: File[],
+   *   OTHERS?: File[]
+   * }
+   */
+  async create(
+    createMerchantDto: CreateMerchantDto,
+    filesByType?: Record<string, Express.Multer.File[]>,
+  ): Promise<Merchant> {
+    // 1️⃣ Tạo merchant chính
+    const merchant = await this.merchantModel.create(createMerchantDto as any);
 
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get(url, {
-          headers: {
-            'User-Agent': 'YourAppNameHere', // bắt buộc phải có
-          },
-        }),
-      );
+    // 2️⃣ Upload từng nhóm file theo type
+    if (filesByType) {
+      for (const typeKey of Object.keys(filesByType)) {
+        const type = typeKey.toUpperCase() as MerchantImageType;
+        const files = filesByType[typeKey];
 
-      if (!response.data || response.data.length === 0) {
-        throw new BadRequestException('Không tìm thấy địa chỉ trên bản đồ');
-      }
+        for (const file of files) {
+          const url = await this.cloudinaryService.uploadImage(
+            file,
+            'merchants',
+          );
 
-      const { lat, lon } = response.data[0];
-      return { latitude: parseFloat(lat), longitude: parseFloat(lon) };
-    } catch (error) {
-      throw new BadRequestException(
-        `Lỗi khi lấy tọa độ từ OSM: ${error.message}`,
-      );
-    }
-  }
-
-  async registerMerchant(createMerchantDTO: CreateMerchantDto) {
-    const { userId, address } = createMerchantDTO;
-    const checkUser = await this.userModel.findOne({
-      where: { id: userId },
-      include: [
-        {
-          model: this.userRoleModel,
-          where: { roleId: 2 },
-          required: true,
-        },
-      ],
-    });
-
-    if (!checkUser) {
-      throw new BadRequestException(
-        'User không có quyền tạo Merchant hoặc chưa tồn tại',
-      );
-    }
-
-    // Lấy tọa độ từ địa chỉ
-    const coordinates = await this.getCoordinatesFromAddress(address);
-    if (!coordinates) {
-      throw new BadRequestException('Không tìm thấy địa chỉ trên bản đồ');
-    }
-
-    const { latitude, longitude } = coordinates;
-
-    // Tạo GeoJSON
-    const geoJson = {
-      type: 'Point',
-      coordinates: [longitude, latitude], // Lưu theo [lon, lat]
-    };
-
-    // Lưu merchant
-    const merchant = await Merchant.create({
-      ...createMerchantDTO, // Spread toàn bộ DTO
-      location: JSON.stringify(geoJson),
-    } as any);
-
-    await this.userRoleModel.update(
-      { merchantId: merchant.id },
-      {
-        where: { userId: checkUser.id, roleId: 2 },
-        returning: true, // PostgreSQL mới hỗ trợ trả về bản ghi
-      },
-    );
-
-    return merchant;
-  }
-
-  async updateMerchant(
-    merchantId: number,
-    userId: number,
-    updateMerchantDto: UpdateMerchantDto,
-  ) {
-    const role = await this.userRoleModel.findOne({
-      where: { userId, roleId: 2 },
-    });
-
-    if (!role) {
-      throw new ForbiddenException('Bạn không có quyền cập nhật Merchant');
-    }
-
-    // Kiểm tra user có đúng là chủ của merchant này không
-    if (role.merchantId !== merchantId) {
-      throw new ForbiddenException(
-        'Bạn không được phép chỉnh sửa merchant của người khác',
-      );
-    }
-
-    const merchant = await this.merchantModel.findByPk(merchantId);
-    if (!merchant) throw new NotFoundException('Không tìm thấy Merchant');
-
-    // Nếu đổi địa chỉ thì cập nhật tọa độ mới
-    if (updateMerchantDto.address) {
-      const coordinates = await this.getCoordinatesFromAddress(
-        updateMerchantDto.address,
-      );
-      if (coordinates) {
-        const { latitude, longitude } = coordinates;
-        updateMerchantDto['location'] = JSON.stringify({
-          type: 'Point',
-          coordinates: [longitude, latitude],
-        });
+          await this.merchantImageModel.create({
+            merchantId: merchant.id,
+            url,
+            type,
+          } as any);
+        }
       }
     }
 
-    await merchant.update(updateMerchantDto);
-    return merchant;
-  }
-
-  async findAllMerchants() {
-    const merchants = await this.merchantModel.findAll({
-      include: [
-        {
-          model: this.userRoleModel,
-          include: [{ model: this.userModel, attributes: ['id', 'email'] }],
-        },
-      ],
-      order: [['createdAt', 'DESC']],
+    // 3️⃣ Trả về merchant kèm ảnh
+    const createdMerchant = await this.merchantModel.findByPk(merchant.id, {
+      include: [MerchantImage],
     });
 
-    if (!merchants || merchants.length === 0) {
-      throw new NotFoundException('Không có Merchant nào được tìm thấy');
-    }
+    if (!createdMerchant) throw new Error('Merchant not found after creation');
 
-    return merchants;
-  }
-
-  async findOneMerchant(id: number) {
-    const merchant = await this.merchantModel.findByPk(id, {
-      include: [
-        {
-          model: this.userRoleModel,
-          include: [{ model: this.userModel, attributes: ['id', 'email'] }],
-          required: false,
-        },
-      ],
-    });
-
-    if (!merchant) {
-      throw new NotFoundException(`Không tìm thấy Merchant với id ${id}`);
-    }
-
-    return merchant;
+    return createdMerchant;
   }
 }

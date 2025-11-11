@@ -14,14 +14,14 @@ import { Permission } from 'src/models/permission.model';
 import { Product } from 'src/models/product.model';
 import { Role } from 'src/models/role.model';
 import { RolePermission } from 'src/models/role_permission.model';
-import { Shipment } from 'src/models/shipment.model';
 import { Topping } from 'src/models/topping.model';
 import { User } from 'src/models/user.model';
 import { UserRole } from 'src/models/user_role.model';
 
 import {
   Drone,
-  DroneTelemetry,
+  DroneHub,
+  MerchantImage,
   ProductToppingGroup,
   ToppingGroup,
 } from 'src/models';
@@ -41,8 +41,10 @@ export const sequelizeConfig = (
   models: [
     // Cha
     Topping,
+    Address,
     User,
     Merchant,
+    MerchantImage,
     Role,
     Permission,
     Category,
@@ -51,16 +53,14 @@ export const sequelizeConfig = (
     ProductToppingGroup,
     Order,
     Cart,
-    Shipment,
-    Address,
     UserRole,
     RolePermission,
     OrderItem,
     OrderItemTopping,
     CartItem,
     CartItemTopping,
+    DroneHub,
     Drone,
-    DroneTelemetry,
   ],
   autoLoadModels: true,
   logging: false,

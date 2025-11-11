@@ -26,39 +26,39 @@ export class AddressController {
     return this.addressService.create(userId, createAddressDto);
   }
 
-  @Get()
-  @ApiBearerAuth('access-token')
-  @Roles('customer', 'admin')
-  findAllAddresses(@Req() req: any) {
-    const userId = req.user.id;
-    return this.addressService.findAllByUser(userId);
-  }
+  // @Get()
+  // @ApiBearerAuth('access-token')
+  // @Roles('customer', 'admin')
+  // findAllAddresses(@Req() req: any) {
+  //   const userId = req.user.id;
+  //   return this.addressService.findAllByUser(userId);
+  // }
 
-  @Get(':id')
-  @ApiBearerAuth('access-token')
-  @Roles('customer', 'admin')
-  findOneAddress(@Req() req: any, @Param('id') id: number) {
-    const userId = req.user.id;
-    return this.addressService.findOne(id, userId);
-  }
+  // @Get(':id')
+  // @ApiBearerAuth('access-token')
+  // @Roles('customer', 'admin')
+  // findOneAddress(@Req() req: any, @Param('id') id: number) {
+  //   const userId = req.user.id;
+  //   return this.addressService.findOne(id, userId);
+  // }
 
-  @Patch(':id')
-  @ApiBearerAuth('access-token')
-  @Roles('customer', 'admin')
-  updateAddress(
-    @Req() req: any,
-    @Param('id') id: number,
-    @Body() updateAdressDto: UpdateAddressDto,
-  ) {
-    const userId = req.user.id;
-    return this.addressService.update(id, userId, updateAdressDto);
-  }
+  // @Patch(':id')
+  // @ApiBearerAuth('access-token')
+  // @Roles('customer', 'admin')
+  // updateAddress(
+  //   @Req() req: any,
+  //   @Param('id') id: number,
+  //   @Body() updateAdressDto: UpdateAddressDto,
+  // ) {
+  //   const userId = req.user.id;
+  //   return this.addressService.update(id, userId, updateAdressDto);
+  // }
 
-  @Delete(':id')
-  @ApiBearerAuth('access-token')
-  @Roles('customer', 'admin')
-  removeAddress(@Req() req: any, @Param('id') id: number) {
-    const userId = req.user.id;
-    return this.addressService.remove(id, userId);
-  }
+  // @Delete(':id')
+  // @ApiBearerAuth('access-token')
+  // @Roles('customer', 'admin')
+  // removeAddress(@Req() req: any, @Param('id') id: number) {
+  //   const userId = req.user.id;
+  //   return this.addressService.remove(id, userId);
+  // }
 }

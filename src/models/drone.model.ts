@@ -1,55 +1,59 @@
-import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
-import { DroneTelemetry } from './drone_telemetry.model';
-import { Shipment } from './shipment.model';
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  ForeignKey,
+  HasOne,
+  Model,
+  Table,
+} from 'sequelize-typescript';
+import { DroneHub } from './drone_hub.model';
+import { Order } from './order.model';
+
+export enum DroneStatus {
+  AVAILABLE = 'AVAILABLE',
+  CHARGING = 'CHARGING',
+  IN_MAINTENANCE = 'IN_MAINTENANCE',
+  FLYING_TO_PICKUP = 'FLYING_TO_PICKUP',
+  AT_PICKUP_POINT = 'AT_PICKUP_POINT',
+  OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
+  DROPPING_OFF = 'DROPPING_OFF',
+  RETURNING_TO_HUB = 'RETURNING_TO_HUB',
+  EMERGENCY_LANDING = 'EMERGENCY_LANDING',
+}
 
 @Table
 export class Drone extends Model<Drone> {
-  @Column({ allowNull: false, type: DataType.STRING })
-  name: string;
-
-  @Column({ allowNull: true, type: DataType.STRING })
-  flytbaseVehicleId: string;
-
   @Column({ allowNull: false, type: DataType.FLOAT })
-  maxRangeKm: number;
-
-  @Column({ allowNull: true, type: DataType.GEOGRAPHY('POINT', 4326) })
-  currentLocation: string;
-
-  @Column({ allowNull: true, type: DataType.FLOAT })
-  altitude: number;
-
-  @Column({ allowNull: true, type: DataType.FLOAT })
-  heading: number;
-
-  @Column({ allowNull: true, type: DataType.FLOAT })
-  speed: number;
-
-  @Column({ allowNull: true, type: DataType.FLOAT })
-  batteryLevel: number;
-
-  @Column({ allowNull: false, type: DataType.FLOAT })
-  maxPayloadKg: number;
-
-  @Column({ allowNull: true, type: DataType.FLOAT })
-  currentPayloadKg: number;
-
-  @Column({ allowNull: true, type: DataType.STRING })
-  mode: string;
+  declare battery: number;
 
   @Column({
     allowNull: false,
-    type: DataType.STRING,
-    defaultValue: 'available',
+    type: DataType.ENUM(...Object.values(DroneStatus)),
+    defaultValue: DroneStatus.AVAILABLE,
   })
-  status: string;
+  declare status: DroneStatus;
 
-  @Column({ allowNull: true, type: DataType.DATE })
-  lastSignal: Date;
+  @Column({ allowNull: true, type: DataType.GEOGRAPHY('POINT', 4326) })
+  declare location: string; 
 
-  @HasMany(() => DroneTelemetry)
-  telemetries: DroneTelemetry[];
+  @ForeignKey(() => DroneHub)
+  @Column({ allowNull: true, type: DataType.INTEGER })
+  declare hubId: number;
 
-  @HasMany(() => Shipment)
-  shipments: Shipment[];
+  @BelongsTo(() => DroneHub)
+  declare hub: DroneHub;
+
+  @ForeignKey(() => Order)
+  @Column({ allowNull: true, type: DataType.INTEGER })
+  declare orderId: number;
+
+  @HasOne(() => Order)
+  declare order: Order;
+
+  @Column({ allowNull: true, type: DataType.FLOAT })
+  declare payloadCapacityKg: number;
+
+  @Column({ allowNull: true, type: DataType.STRING })
+  declare serialNumber: string;
 }

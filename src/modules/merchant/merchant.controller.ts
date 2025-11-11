@@ -1,53 +1,43 @@
 import {
   Body,
   Controller,
-  Get,
-  Param,
-  Patch,
   Post,
-  Req,
-  UseGuards,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { Public } from 'src/common/decorators/global-guard';
-import { LocalAuthGuard } from '../auth/guards/local-auth.guard';
 import { CreateMerchantDto } from './dto/create-merchant.dto';
-import { UpdateMerchantDto } from './dto/update-merchant.dto';
 import { MerchantService } from './merchant.service';
-import { JWTAuthGuard } from '../auth/guards/jwt.guard';
 
-@Controller('merchant')
+@Controller('merchants')
 export class MerchantController {
   constructor(private readonly merchantService: MerchantService) {}
 
   @Public()
-  @Post('register')
-  async register(@Body() createMerchantDTO: CreateMerchantDto) {
-    return this.merchantService.registerMerchant(createMerchantDTO);
-  }
-
-  @UseGuards(JWTAuthGuard)
-  @Patch(':id')
-  @ApiBody({ type: UpdateMerchantDto })
-  @ApiBearerAuth('access-token')
-  async updateMerchant(
-    @Param('id') id: number,
-    @Body() dto: UpdateMerchantDto,
-    @Req() req: any, 
+  @Post()
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'IDENTITY', maxCount: 5 },
+        { name: 'BUSINESS', maxCount: 5 },
+        { name: 'KITCHEN', maxCount: 5 },
+        { name: 'OTHERS', maxCount: 5 },
+      ],
+      { storage: memoryStorage() },
+    ),
+  )
+  async create(
+    @Body() createMerchantDto: CreateMerchantDto,
+    @UploadedFiles()
+    files: {
+      IDENTITY?: Express.Multer.File[];
+      BUSINESS?: Express.Multer.File[];
+      KITCHEN?: Express.Multer.File[];
+      OTHERS?: Express.Multer.File[];
+    },
   ) {
-    const userId = req.user.id;
-    return this.merchantService.updateMerchant(id, userId, dto);
-  }
-
-  @Public()
-  @Get("/")
-  async findAllMerchants() {
-    return await this.merchantService.findAllMerchants()
-  }
-
-  @Public()
-  @Get(":id")
-  async findMerchant(@Param('id') id: number) {
-    return await this.merchantService.findOneMerchant(id)
+    return this.merchantService.create(createMerchantDto, files);
   }
 }

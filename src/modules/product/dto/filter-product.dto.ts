@@ -17,17 +17,17 @@ export class filterProductDto {
   @IsNumber()
   categoryId?: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
   page?: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
   limit?: number;
@@ -37,7 +37,7 @@ export class filterProductDto {
   @IsNumber()
   minPrice?: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
   maxPrice?: number;

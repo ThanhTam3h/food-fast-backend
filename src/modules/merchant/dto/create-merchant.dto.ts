@@ -1,50 +1,156 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsEmail,
+  IsDateString,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
 
-export class CreateMerchantDto {
+export class RegisterImageDto {
   @ApiProperty()
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
+  url: string;
+}
+
+export class CreateMerchantDto {
+  // --- 1. Thông tin cửa hàng / cơ bản ---
+  @ApiProperty({ description: 'Tên cửa hàng' })
+  @IsString()
+  @IsNotEmpty()
   name: string;
 
-  @ApiProperty()
-  @IsOptional()
+  @ApiProperty({ description: 'Tên người đại diện' })
   @IsString()
-  description?: string;
-
-  @ApiProperty()
   @IsOptional()
-  @IsString()
-  logo?: string;
+  representativeName?: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Email cửa hàng' })
+  @IsString()
   @IsOptional()
-  @IsString()
-  image?: string;
+  merchantEmail?: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Số điện thoại cửa hàng' })
+  @IsString()
   @IsOptional()
-  @IsString()
-  phone?: string;
+  merchantPhoneNumber?: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Địa chỉ cửa hàng' })
+  @IsString()
   @IsNotEmpty()
-  @IsEmail()
-  email: string;
+  restaurantAddress: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiProperty({ description: 'Mô hình kinh doanh (công ty/HKD/cá nhân)' })
   @IsString()
-  address: string;
+  @IsOptional()
+  businessModel?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Số lượng đơn hàng trung bình 1 ngày',
+    example: 100,
+  })
   @IsNumber()
-  @IsNotEmpty()
-  userId: number;
+  @IsOptional()
+  dailyOrderVolume?: number = 100;
+
+  // --- 2. Thông tin đăng ký & mô hình ---
+  @ApiProperty({
+    description: 'Hình thức đăng ký',
+    example: 'Đăng ký nhà hàng mới',
+  })
+  @IsString()
+  @IsOptional()
+  registrationType?: string;
+
+  @ApiProperty({ description: 'Tên đăng ký kinh doanh đầy đủ' })
+  @IsString()
+  @IsOptional()
+  legalBusinessName?: string;
+
+  @ApiProperty({ description: 'Mã số doanh nghiệp' })
+  @IsString()
+  @IsOptional()
+  businessRegistrationCode?: string;
+
+  @ApiProperty({ description: 'Ngày đăng ký kinh doanh' })
+  @IsDateString()
+  @IsOptional()
+  registrationDate?: string;
+
+  @ApiProperty({ description: 'Ngành nghề kinh doanh' })
+  @IsString()
+  @IsOptional()
+  businessIndustry?: string;
+
+  @ApiProperty({ description: 'Danh sách hình ảnh liên quan' })
+  @IsOptional()
+  images?: RegisterImageDto[];
+
+  // --- 3. Thông tin ngân hàng ---
+  @ApiProperty({ description: 'Tên ngân hàng' })
+  @IsString()
+  @IsOptional()
+  bankName?: string;
+
+  @ApiProperty({ description: 'Số tài khoản ngân hàng' })
+  @IsString()
+  @IsOptional()
+  bankAccountNumber?: string;
+
+  @ApiProperty({ description: 'Tên chủ tài khoản ngân hàng' })
+  @IsString()
+  @IsOptional()
+  bankAccountHolderName?: string;
+
+  // --- 4. Thông tin chủ sở hữu ---
+  @ApiProperty({ description: 'Tên chủ sở hữu' })
+  @IsString()
+  @IsOptional()
+  ownerName?: string;
+
+  @ApiProperty({ description: 'Ngày sinh chủ sở hữu' })
+  @IsDateString()
+  @IsOptional()
+  ownerDateOfBirth?: string;
+
+  @ApiProperty({ description: 'Số CMND/CCCD' })
+  @IsString()
+  @IsOptional()
+  ownerIdNumber?: string;
+
+  @ApiProperty({ description: 'Ngày cấp CMND/CCCD' })
+  @IsDateString()
+  @IsOptional()
+  ownerIdIssueDate?: string;
+
+  @ApiProperty({ description: 'Nơi cấp CMND/CCCD' })
+  @IsString()
+  @IsOptional()
+  ownerIdIssuePlace?: string;
+
+  @ApiProperty({ description: 'Ngày hết hạn CMND/CCCD' })
+  @IsDateString()
+  @IsOptional()
+  ownerIdExpiryDate?: string;
+
+  @ApiProperty({ description: 'Địa chỉ thường trú' })
+  @IsString()
+  @IsOptional()
+  ownerPermanentAddress?: string;
+
+  @ApiProperty({ description: 'Quốc gia' })
+  @IsString()
+  @IsOptional()
+  ownerCountry?: string;
+
+  @ApiProperty({ description: 'Thành phố' })
+  @IsString()
+  @IsOptional()
+  ownerCity?: string;
+
+  @ApiProperty({ description: 'Địa chỉ hiện tại' })
+  @IsString()
+  @IsOptional()
+  ownerCurrentAddress?: string;
 }
