@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { Helper } from 'src/common/helpers/helper';
@@ -29,142 +33,21 @@ export class OrderService {
     private readonly sequelize: Sequelize,
   ) {}
 
-  // async createOrder(orderData: CreateOrderDto): Promise<Order> {
-  //   const transaction = await this.sequelize.transaction();
-
-  //   try {
-  //     const newAddress = await this.addressService.create(
-  //       orderData.userId,
-  //       orderData.temporaryAddress,
-  //     );
-
-  //     const addressId = newAddress.id;
-
-  //     const distanceResult = orderData.distance;
-
-  //     // if (!Helper.validateDeliveryDistance(distanceResult)) {
-  //     //   throw new BadRequestException('This address is out of delivery range');
-  //     // }
-
-  //     const deliveryFee = Helper.caculateDeliveryFee(distanceResult);
-
-  //     const subTotal = await this.caculateSubtotal(
-  //       orderData.orderItems,
-  //       transaction,
-  //     );
-
-  //     const total = subTotal + deliveryFee;
-
-  //     const orderNumber = await Helper.generateOrderNumber();
-
-  //     const newOrder = await this.orderModel.create(
-  //       {
-  //         orderNumber,
-  //         userId: orderData.userId,
-  //         merchantId: orderData.merchantId,
-  //         addressId,
-  //         status: OrderStatus.PENDING,
-  //         paymentStatus: PaymentStatus.PENDING,
-  //         paymentMethod: orderData.paymentMethod,
-  //         subTotal,
-  //         deliveryFee,
-  //         total,
-  //         notes: orderData.note || null,
-  //       } as Order,
-  //       { transaction },
-  //     );
-
-  //     await this.createOrderItems(
-  //       newOrder.id,
-  //       orderData.orderItems,
-  //       transaction,
-  //     );
-
-  //     await transaction.commit();
-
-  //     return (await this.orderModel.findByPk(newOrder.id, {
-  //       include: [
-  //         {
-  //           model: Address,
-  //           attributes: ['street', 'location'],
-  //         },
-  //         {
-  //           model: User,
-  //           attributes: ['email', 'phone'],
-  //         },
-  //         {
-  //           model: OrderItem,
-  //           include: [
-  //             {
-  //               model: Product,
-  //               attributes: ['name', 'basePrice', 'image'],
-  //             },
-  //             {
-  //               model: OrderItemTopping,
-  //               include: [
-  //                 {
-  //                   model: Topping,
-  //                   attributes: ['name', 'price'],
-  //                 },
-  //               ],
-  //             },
-  //           ],
-  //         },
-  //       ],
-  //     })) as Order;
-  //   } catch (error) {
-  //     console.log(error.message);
-  //     await transaction.rollback();
-  //     throw error;
-  //   }
-  // }
-
-  // async caculateSubtotal(
-  //   orderItems: CreateOrderDto['orderItems'],
-  //   transaction: any,
-  // ): Promise<number> {
-  //   let subToal = 0;
-
-  //   for (const item of orderItems) {
-  //     let productPrice = 0;
-  //     const product = await this.productModel.findByPk(item.productId, {
-  //       transaction,
-  //     });
-  //     let toppingPrice = 0;
-  //     if (item.toppings) {
-  //       for (const toppings of item.toppings) {
-  //         const topping = await this.toppingModel.findByPk(toppings.toppingId, {
-  //           transaction,
-  //         });
-
-  //         if (topping && topping.dataValues) {
-  //           toppingPrice +=
-  //             (topping?.dataValues?.price || 0) * toppings.quantity;
-  //         }
-  //       }
-  //     }
-
-  //     subToal += (productPrice + toppingPrice) * item.quantity;
-  //   }
-
-  //   return subToal;
-  // }
-
   async createOrder(orderData: CreateOrderDto): Promise<Order> {
     const transaction = await this.sequelize.transaction();
 
     try {
-      // 1️⃣ Tạo address mới
+      // Tạo address mới
       const newAddress = await this.addressService.create(
         orderData.userId,
         orderData.temporaryAddress,
       );
       const addressId = newAddress.id;
 
-      // 2️⃣ Tính phí giao hàng
+      // Tính phí giao hàng
       const deliveryFee = Helper.caculateDeliveryFee(orderData.distance);
 
-      // 3️⃣ Tính subtotal
+      // Tính subtotal
       let subTotal = 0;
       for (const item of orderData.orderItems) {
         const product = await this.productModel.findByPk(item.productId, {
@@ -193,7 +76,7 @@ export class OrderService {
 
       const total = subTotal + deliveryFee;
 
-      // 4️⃣ Tạo order
+      // Tạo order
       const orderNumber = await Helper.generateOrderNumber();
       const newOrder = await this.orderModel.create(
         {
@@ -212,7 +95,7 @@ export class OrderService {
         { transaction },
       );
 
-      // 5️⃣ Tạo order items & toppings
+      // Tạo order items & toppings
       for (const item of orderData.orderItems) {
         const orderItem = await this.orderItemModel.create(
           {
@@ -239,7 +122,7 @@ export class OrderService {
 
       await transaction.commit();
 
-      // 6️⃣ Trả về order với relation
+      // Trả về order với relation
       return (await this.orderModel.findByPk(newOrder.id, {
         include: [
           { model: Address, attributes: ['street', 'location'] },

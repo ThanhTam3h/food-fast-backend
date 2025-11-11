@@ -183,6 +183,7 @@ export class UserService {
       };
     } catch (error) {
       await t.rollback();
+      throw error;
     }
   }
 

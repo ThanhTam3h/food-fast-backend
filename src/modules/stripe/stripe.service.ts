@@ -24,6 +24,15 @@ export class StripeService {
 
   /** Tạo checkout session */
   async createCheckoutSession(orderNumber: string, amount: number) {
+      const exchangeRate = 27366; // 1 USD = 25,000 VND
+      const amountUSD = amount / exchangeRate; // chuyển sang USD
+      const amountCents = Math.round(amountUSD * 100); // chuyển sang cents
+
+      if (amountCents > 999_999_99) {
+        throw new Error(
+          "The total amount exceeds Stripe's maximum of $999,999.99",
+        );
+      }
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -31,7 +40,7 @@ export class StripeService {
           price_data: {
             currency: 'usd',
             product_data: { name: `Order #${orderNumber}` },
-            unit_amount: Math.round(amount * 100),
+            unit_amount: amountCents,
           },
           quantity: 1,
         },

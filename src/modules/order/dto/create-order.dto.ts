@@ -46,10 +46,6 @@ export class CreateOrderDto {
   @IsNumber()
   merchantId: number;
 
-  // @ApiProperty()
-  // @IsNumber()
-  // addressId: number;
-
   @ApiProperty({
     required: false,
     type: () => TemporaryAddressDto,
@@ -60,22 +56,6 @@ export class CreateOrderDto {
   @ValidateNested()
   @Type(() => TemporaryAddressDto)
   temporaryAddress: TemporaryAddressDto;
-
-  // @ApiProperty({
-  //   type: () => [Object],
-  //   description: 'Danh sách sản phẩm trong đơn hàng',
-  // })
-  // @IsArray()
-  // @ValidateNested({ each: true })
-  // @Type(() => Object)
-  // orderItems: Array<{
-  //   productId: number;
-  //   quantity: number;
-  //   toppings?: Array<{
-  //     toppingId: number;
-  //     quantity: number;
-  //   }>;
-  // }>;
 
   @ApiProperty({ type: () => [OrderItemDto] })
   @IsArray()

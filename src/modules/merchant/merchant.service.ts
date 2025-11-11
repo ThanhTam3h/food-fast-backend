@@ -162,6 +162,7 @@ export class MerchantService {
         {
           model: this.userRoleModel,
           include: [{ model: this.userModel, attributes: ['id', 'email'] }],
+          required: false,
         },
       ],
     });

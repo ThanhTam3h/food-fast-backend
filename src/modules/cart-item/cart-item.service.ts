@@ -314,12 +314,20 @@ export class CartItemService {
     transaction?: any,
   ): Promise<any> {
     // Kiểm tra quyền sở hữu giỏ hàng
-    const cart = await this.modelCart.findByPk(cartId);
+    // const cart = await this.modelCart.findByPk(cartId);
+    const cart = await this.modelCart.findByPk(cartId, {
+      transaction,
+      attributes: ['id', 'userId', 'merchantId'],
+    });
     if (!cart || cart.userId !== userId || cart.merchantId !== merchantId) {
       throw new BadRequestException('Không có quyền truy cập giỏ hàng này');
     }
 
-    const merchant = await this.modelMerchant.findByPk(cart.merchantId);
+    // const merchant = await this.modelMerchant.findByPk(cart.merchantId);
+    const merchant = await this.modelMerchant.findByPk(merchantId, {
+      transaction,
+      attributes: ['id', 'name'],
+    });
 
     // Lấy tất cả cart item + product + topping
     const cartItems = await this.modelCartItem.findAll({
