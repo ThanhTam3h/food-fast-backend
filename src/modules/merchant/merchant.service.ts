@@ -7,12 +7,16 @@ import {
 } from 'src/models/merchant_image.model';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CreateMerchantDto } from './dto/create-merchant.dto';
+import { Address } from 'src/models';
 
 @Injectable()
 export class MerchantService {
   constructor(
     @InjectModel(Merchant)
     private readonly merchantModel: typeof Merchant,
+
+    @InjectModel(Address)
+    private readonly addressModel: typeof Merchant,
 
     @InjectModel(MerchantImage)
     private readonly merchantImageModel: typeof MerchantImage,
@@ -32,10 +36,10 @@ export class MerchantService {
     createMerchantDto: CreateMerchantDto,
     filesByType?: Record<string, Express.Multer.File[]>,
   ): Promise<Merchant> {
-    // 1️⃣ Tạo merchant chính
+    // Tạo merchant chính
     const merchant = await this.merchantModel.create(createMerchantDto as any);
 
-    // 2️⃣ Upload từng nhóm file theo type
+    // Upload từng nhóm file theo type
     if (filesByType) {
       for (const typeKey of Object.keys(filesByType)) {
         const type = typeKey.toUpperCase() as MerchantImageType;
@@ -56,7 +60,7 @@ export class MerchantService {
       }
     }
 
-    // 3️⃣ Trả về merchant kèm ảnh
+    // Trả về merchant kèm ảnh
     const createdMerchant = await this.merchantModel.findByPk(merchant.id, {
       include: [MerchantImage],
     });
@@ -64,5 +68,18 @@ export class MerchantService {
     if (!createdMerchant) throw new Error('Merchant not found after creation');
 
     return createdMerchant;
+  }
+
+  async findOne(merchantId: number) {
+    const merchant = await this.merchantModel.findByPk(merchantId, {
+      attributes: ['id', 'name'], // bạn vẫn muốn lấy id, name
+      include: [
+        {
+          model: this.addressModel,
+          attributes: ['street', 'location'], // chỉ lấy các trường cần thiết
+        },
+      ],
+    });
+    return merchant;
   }
 }

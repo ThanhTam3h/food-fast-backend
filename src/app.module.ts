@@ -26,6 +26,7 @@ import { CartItemToppingModule } from './modules/cart-item-topping/cart-item-top
 import { CartItemModule } from './modules/cart-item/cart-item.module';
 import { CartPreviewModule } from './modules/cart-preview/cart-preview.module';
 import { CartModule } from './modules/cart/cart.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { OrderModule } from './modules/order/order.module';
 import { ProductToppingGroupModule } from './modules/product-topping-group/product-topping-group.module';
 import { ProductModule } from './modules/product/product.module';
@@ -33,8 +34,6 @@ import { StripeModule } from './modules/stripe/stripe.module';
 import { ToppingGroupModule } from './modules/topping-group/topping-group.module';
 import { ToppingModule } from './modules/topping/topping.module';
 import { UserModule } from './modules/user/user.module';
-import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
-
 
 @Module({
   imports: [

@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  Get,
+  Param,
   Post,
   UploadedFiles,
   UseInterceptors,
@@ -39,5 +41,11 @@ export class MerchantController {
     },
   ) {
     return this.merchantService.create(createMerchantDto, files);
+  }
+
+  @Public()
+  @Get(':id')
+  async findMerchant(@Param('id') id: number) {
+    return await this.merchantService.findOne(id);
   }
 }
