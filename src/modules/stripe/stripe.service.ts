@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OrderStatus, PaymentStatus } from 'src/models/order.model';
 import Stripe from 'stripe';
+import { CartItemService } from '../cart-item/cart-item.service';
 import { OrderService } from '../order/order.service';
 
 @Injectable()
@@ -11,9 +12,10 @@ export class StripeService {
   constructor(
     private readonly configService: ConfigService,
     private readonly orderService: OrderService,
+    private readonly cartItemService: CartItemService,
   ) {
     const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
-    
+
     if (!secretKey)
       throw new Error('Missing STRIPE_SECRET_KEY in environment variables');
 
@@ -24,15 +26,15 @@ export class StripeService {
 
   /** Tạo checkout session */
   async createCheckoutSession(orderNumber: string, amount: number) {
-      const exchangeRate = 27366; // 1 USD = 25,000 VND
-      const amountUSD = amount / exchangeRate; // chuyển sang USD
-      const amountCents = Math.round(amountUSD * 100); // chuyển sang cents
+    const exchangeRate = 27366; // 1 USD = 25,000 VND
+    const amountUSD = amount / exchangeRate; // chuyển sang USD
+    const amountCents = Math.round(amountUSD * 100); // chuyển sang cents
 
-      if (amountCents > 999_999_99) {
-        throw new Error(
-          "The total amount exceeds Stripe's maximum of $999,999.99",
-        );
-      }
+    if (amountCents > 999_999_99) {
+      throw new Error(
+        "The total amount exceeds Stripe's maximum of $999,999.99",
+      );
+    }
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -102,12 +104,17 @@ export class StripeService {
 
     const paymentIntentId = session.payment_intent as string;
 
-    await this.orderService.updateOrderInfo(orderNumber, {
+    const order = await this.orderService.updateOrderInfo(orderNumber, {
       paymentStatus: PaymentStatus.PAID,
       stripePaymentIntentId: paymentIntentId,
     } as any);
 
-    console.log(`Order ${orderNumber} marked as PAID via Stripe webhook`);
+    if (order) {
+      const userId = order.userId;
+      const merchantId = order.merchantId;
+
+      await this.cartItemService.clearCart(userId, merchantId);
+    }
   }
 
   private async handleCheckoutSessionExpired(session: Stripe.Checkout.Session) {
@@ -118,7 +125,5 @@ export class StripeService {
       paymentStatus: PaymentStatus.FAILED,
       status: OrderStatus.CANCELLED,
     } as any);
-
-    console.log(`Order ${orderNumber} cancelled due to expired session`);
   }
 }

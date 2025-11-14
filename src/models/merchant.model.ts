@@ -62,9 +62,11 @@ export class Merchant extends Model<Merchant> {
   @Column({ defaultValue: false, type: DataType.BOOLEAN })
   declare is_temporarily_closed: boolean;
 
+  // bỏ
   @Column({ allowNull: true, type: DataType.STRING })
   declare image: string;
 
+  // bỏ
   @Column({ defaultValue: true, type: DataType.BOOLEAN })
   declare open: boolean;
 

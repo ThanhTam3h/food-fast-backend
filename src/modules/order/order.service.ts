@@ -8,6 +8,7 @@ import { Sequelize } from 'sequelize-typescript';
 import { Helper } from 'src/common/helpers/helper';
 import {
   Address,
+  Merchant,
   Order,
   OrderItem,
   OrderItemTopping,
@@ -27,6 +28,8 @@ export class OrderService {
     @InjectModel(OrderItemTopping)
     private readonly orderItemToppingModel: typeof OrderItemTopping,
     @InjectModel(Address) private readonly addressModel: typeof Address,
+    @InjectModel(User) private readonly userModel: typeof User,
+    @InjectModel(Merchant) private readonly merchantModel: typeof Merchant,
     @InjectModel(Product) private readonly productModel: typeof Product,
     @InjectModel(Topping) private readonly toppingModel: typeof Topping,
     private readonly addressService: AddressService,
@@ -228,6 +231,58 @@ export class OrderService {
 
     Object.assign(order, updateData);
     await order.save();
+    return order;
   }
 
+  async getOrderItemsByOrderId(orderNumber: string) {
+    try {
+      const order = await this.orderModel.findAll({
+        where: { orderNumber },
+        attributes: {
+          exclude: ['stripePaymentIntentId'], // Exclude these attributes
+        },
+        include: [
+          {
+            model: this.merchantModel,
+            attributes: ['id', 'name'],
+            include: [
+              {
+                model: this.addressModel,
+                attributes: ['id', 'street', 'location'],
+              },
+            ],
+          },
+          {
+            model: this.userModel,
+            attributes: ['id', 'email', 'phone'],
+          },
+          {
+            model: this.addressModel,
+            attributes: ['id', 'street', 'location'],
+          },
+          {
+            model: this.orderItemModel,
+            include: [
+              {
+                model: this.productModel,
+                attributes: ['id', 'name', 'basePrice', 'image'],
+              },
+              {
+                model: this.orderItemToppingModel,
+                include: [
+                  {
+                    model: Topping,
+                    attributes: ['id', 'name', 'price'],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+      return order;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

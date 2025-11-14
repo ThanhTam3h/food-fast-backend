@@ -5,16 +5,18 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
-import { isOtpExpired } from 'src/common/helpers/functions';
-import { User } from 'src/models';
+import { createOtpExpiry, generateOtp, isOtpExpired } from 'src/common/helpers/functions';
+import { Merchant, User } from 'src/models';
 import { UserService } from '../user/user.service';
 import { VerifyOtpDTO } from './dto/verifyOTP.dto';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly mailerService: MailerService,
     @InjectModel(User) private readonly userModel: typeof User,
   ) {}
 
@@ -39,7 +41,6 @@ export class AuthService {
 
   async verifyOtp(verifyOtpDTO: VerifyOtpDTO) {
     const { email, otp } = verifyOtpDTO;
-    console.log(email, otp);
     const user = await this.userService.findByEmail(email);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -58,6 +59,51 @@ export class AuthService {
     return {
       success: true,
       message: 'OTP verified successfully',
+    };
+  }
+
+  async resendOtp(email: string) {
+    // Kiểm tra user tồn tại
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Nếu user đã active rồi thì không cần resend
+    if (user.isActive) {
+      throw new BadRequestException('User is already active');
+    }
+
+    // Tạo OTP mới + thời hạn mới
+    const newOtp = generateOtp();
+    const newExpiry = createOtpExpiry();
+
+    // Cập nhật user
+    await this.userModel.update(
+      { code_id: newOtp, code_expired: newExpiry },
+      { where: { email } },
+    );
+
+    // Gửi email OTP mới
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Resend OTP - Xác minh tài khoản của bạn',
+      template: './verify-otp',
+      context: {
+        appName: 'Fastfood delivery',
+        userEmail: email,
+        otpCode: newOtp,
+        expiryTime: newExpiry,
+        supportEmail: 'support@naomieats.com',
+        companyAddress: '123 Nguyễn Trãi, TP.HCM',
+        companyPhone: '0123 456 789',
+        currentYear: new Date().getFullYear(),
+      },
+    });
+
+    return {
+      success: true,
+      message: `OTP has been resent to ${email}`,
     };
   }
 }

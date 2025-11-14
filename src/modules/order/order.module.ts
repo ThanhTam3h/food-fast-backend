@@ -2,11 +2,13 @@ import { forwardRef, Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import {
   Address,
+  Merchant,
   Order,
   OrderItem,
   OrderItemTopping,
   Product,
   Topping,
+  User,
 } from 'src/models';
 import { AddressModule } from '../address/address.module';
 import { OrderController } from './order.controller';
@@ -24,6 +26,8 @@ import { StripeModule } from '../stripe/stripe.module';
       Product,
       Topping,
       OrderItemTopping,
+      User,
+      Merchant
     ]),
     AddressModule,
     forwardRef(() => StripeModule),

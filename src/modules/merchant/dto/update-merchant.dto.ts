@@ -1,4 +1,3 @@
-// src/modules/merchant/dto/update-merchant.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString, IsEmail, IsBoolean } from 'class-validator';
 
@@ -37,4 +36,9 @@ export class UpdateMerchantDto {
   @IsOptional()
   @IsBoolean()
   is_temporarily_closed?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  openingHours?: string;
 }

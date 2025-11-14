@@ -1,0 +1,278 @@
+<html lang='vi'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>Thông báo kết quả Đăng ký Đối tác - {{appName}}</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Arial', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f4f4f4;
+      }
+      .email-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      }
+      /* Header chung */
+      .header {
+        background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+        padding: 40px 20px;
+        text-align: center;
+        color: white;
+      }
+      .header h1 {
+        font-size: 28px;
+        margin-bottom: 10px;
+        font-weight: 300;
+      }
+      .header .subtitle {
+        font-size: 16px;
+        opacity: 0.9;
+      }
+      .content {
+        padding: 40px 30px;
+      }
+      .greeting {
+        font-size: 18px;
+        margin-bottom: 20px;
+        color: #2c3e50;
+      }
+      .message {
+        font-size: 16px;
+        line-height: 1.8;
+        margin-bottom: 30px;
+        color: #555;
+      }
+      /* --- CTA Button Styles (Màu xanh lá cho Duyệt, Xanh dương cho Từ Chối) --- */
+      .cta-box {
+        text-align: center;
+        margin: 30px 0;
+      }
+      .cta-button-approve {
+        display: inline-block;
+        padding: 15px 30px;
+        background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+        color: white !important;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
+        transition: transform 0.2s;
+        min-width: 250px;
+      }
+      .cta-button-reject {
+        display: inline-block;
+        padding: 10px 25px;
+        background-color: #007bff; /* Màu xanh dương cho hành động phụ */
+        color: white !important;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: bold;
+        transition: transform 0.2s;
+        min-width: 200px;
+      }
+      .cta-button-approve:hover,
+      .cta-button-reject:hover {
+        opacity: 0.9;
+      }
+
+      /* --- Success Info Block (Xanh lá) --- */
+      .success-info {
+        background-color: #d4edda;
+        border-left: 4px solid #4caf50;
+        padding: 15px 20px;
+        margin: 30px 0;
+        border-radius: 0 8px 8px 0;
+      }
+      .success-info h3 {
+        color: #155724;
+        font-size: 16px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+      }
+      .success-info h3::before {
+        content: '🎉';
+        margin-right: 8px;
+      }
+      .success-info ul {
+        color: #155724;
+        font-size: 14px;
+        margin-left: 20px;
+      }
+      .success-info li {
+        margin-bottom: 5px;
+      }
+
+      /* --- Warning/Info Block (Vàng) --- */
+      .warning-info {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px 20px;
+        margin: 30px 0;
+        border-radius: 0 8px 8px 0;
+      }
+      .warning-info h3 {
+        color: #856404;
+        font-size: 16px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+      }
+      .warning-info h3::before {
+        content: '❌';
+        margin-right: 8px;
+      }
+      .warning-info ul {
+        color: #856404;
+        font-size: 14px;
+        margin-left: 20px;
+      }
+      .warning-info li {
+        margin-bottom: 5px;
+      }
+
+      .footer {
+        background-color: #f8f9fa;
+        padding: 30px;
+        text-align: center;
+        border-top: 1px solid #dee2e6;
+      }
+      .footer p {
+        font-size: 14px;
+        color: #6c757d;
+        margin-bottom: 10px;
+      }
+      .footer .company-info {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #dee2e6;
+      }
+      .footer .company-info p {
+        margin-bottom: 5px;
+      }
+      @media (max-width: 600px) {
+        .content {
+          padding: 20px;
+        }
+        .header {
+          padding: 30px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class='email-container'>
+      <!-- Header: Tiêu đề chung hoặc theo kết quả -->
+      <div class='header'>
+        {{#if isApproved}}
+          <h1>Chúc Mừng!</h1>
+          <p class='subtitle'>Hồ sơ Đối tác {{appName}} của bạn đã được duyệt</p>
+        {{else}}
+          <h1>Thông Báo</h1>
+          <p class='subtitle'>Về Kết Quả Đăng Ký Đối Tác {{appName}}</p>
+        {{/if}}
+      </div>
+
+      <!-- Main Content -->
+      <div class='content'>
+        <div class='greeting'>
+          Xin chào
+          {{userEmail}},
+        </div>
+
+        {{#if isApproved}}
+          <!-- START: Nội dung cho trường hợp Duyệt (APPROVE) -->
+          <div class='message'>
+            <p>Chúng tôi vui mừng thông báo rằng hồ sơ đăng ký đối tác của bạn
+              tại <strong>{{appName}}</strong> đã được chấp thuận chính
+              thức!
+            </p>
+            <p>
+              Bạn đã sẵn sàng để bắt đầu bán hàng và phục vụ khách hàng trên nền
+              tảng của chúng tôi.
+            </p>
+            <p>
+              Vui lòng nhấn vào nút bên dưới để hoàn tất các bước thiết lập cuối cùng.
+            </p>
+          </div>
+
+          <!-- CTA Button (Approve - Màu xanh lá) -->
+          <div class='cta-box'>
+            <a
+              href='{{onboardingLink}}'
+              class='cta-button-approve'
+              target='_blank'
+            >
+              BẮT ĐẦU THIẾT LẬP CỬA HÀNG
+            </a>
+          </div>
+
+          <!-- Success Info Block -->
+          <div class='success-info'>
+            <h3>Các bước tiếp theo</h3>
+            <ul>
+              <li>Bước 1: Đăng ký tài khoản nhà hàng qua đường link trên.</li>
+              <li>Bước 2: Đăng nhập tài khoản và cập nhật thông tin chi tiết về cửa hàng và giờ hoạt
+                động.</li>
+              <li>Bước 3: Tạo và tải lên Menu của cửa hàng.</li>
+              <li>Bước 4: Bắt đầu nhận đơn hàng!</li>
+            </ul>
+          </div>
+          <!-- END: Nội dung cho trường hợp Duyệt (APPROVE) -->
+        {{else}}
+          <!-- START: Nội dung cho trường hợp Từ Chối (REJECT) -->
+          <div class='message'>
+            <p>Chúng tôi đã hoàn tất quá trình đánh giá hồ sơ đăng ký đối tác
+              của bạn tại <strong>{{appName}}</strong>.</p>
+            <p>Chúng tôi rất tiếc phải thông báo rằng hồ sơ của bạn chưa đáp
+              ứng được các tiêu chí hiện tại và không thể được chấp thuận vào
+              thời điểm này.</p>
+          </div>
+
+
+          <div class='message'>
+            <p>
+              Chúng tôi hiểu rằng đây có thể là thông tin đáng tiếc. Bạn hoàn
+              toàn có thể nộp lại hồ sơ sau khi đã khắc phục các vấn đề được
+              nêu trên.
+            </p>
+            <p>Nếu bạn muốn thảo luận chi tiết hơn về kết quả này hoặc cần thêm
+              thông tin về các tiêu chí hợp tác, vui lòng liên hệ với chúng tôi.
+            </p>
+          </div>
+          <!-- END: Nội dung cho trường hợp Từ Chối (REJECT) -->
+        {{/if}}
+
+        <div class='message'>
+          <p>Nếu bạn cần bất kỳ sự hỗ trợ nào trong quá trình thiết lập, vui
+            lòng liên hệ với đội ngũ hỗ trợ của chúng tôi.</p>
+          <p>Trân trọng,<br />
+            Đội ngũ phát triển Đối tác
+            {{appName}}</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class='footer'>
+        <p>Email này được gửi tự động, vui lòng không trả lời trực tiếp.</p>
+        <div class='company-info'>
+          <p><strong>{{appName}}</strong></p>
+          <p>{{companyAddress}}</p>
+          <p>Phone: {{companyPhone}} | Email: {{supportEmail}}</p>
+          <p>© {{currentYear}} {{appName}}. Tất cả quyền được bảo lưu.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

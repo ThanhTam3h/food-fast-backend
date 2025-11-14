@@ -28,4 +28,13 @@ export class CloudinaryService {
       stream.end(file.buffer);
     });
   }
+
+  async deleteImageByUrl(url: string): Promise<void> {
+    // Lấy public_id từ URL Cloudinary
+    const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.\w+$/);
+    if (!match) return;
+
+    const publicId = match[1]; // phần sau /upload/ và trước .jpg/.png
+    await cloudinary.uploader.destroy(publicId);
+  }
 }

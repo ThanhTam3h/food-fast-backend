@@ -113,19 +113,16 @@ export class AppModule implements NestModule {
 
     consumer
       .apply((req, res, next) => {
-        console.log('Stripe middleware triggered for:', req.url);
         let data = '';
         req.setEncoding('utf8');
         req.on('data', (chunk) => (data += chunk));
         req.on('end', () => {
           req['rawBody'] = Buffer.from(data);
-          console.log('Captured rawBody length:', req['rawBody'].length);
           next();
         });
       })
       .forRoutes({
         path: 'api/v1/stripe/webhook',
-        // path: '*',
         method: RequestMethod.POST,
       });
   }

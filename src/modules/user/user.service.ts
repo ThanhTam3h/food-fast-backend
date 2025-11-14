@@ -3,9 +3,10 @@ import { InjectModel } from '@nestjs/sequelize';
 import * as bcrypt from 'bcryptjs';
 
 import { MailerService } from '@nestjs-modules/mailer';
+import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { createOtpExpiry, generateOtp } from 'src/common/helpers/functions';
-import { Role, User, UserRole } from 'src/models';
+import { Merchant, Role, User, UserRole } from 'src/models';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -15,6 +16,7 @@ export class UserService {
     @InjectModel(User) private readonly userModel: typeof User,
     @InjectModel(Role) private readonly roleModel: typeof Role,
     @InjectModel(UserRole) private readonly userRoleModel: typeof UserRole,
+    @InjectModel(Merchant) private readonly merchantModel: typeof Merchant,
     private readonly sequelize: Sequelize,
     private readonly mailerService: MailerService,
   ) {}
@@ -123,9 +125,20 @@ export class UserService {
 
     try {
       const { email, password, role } = createUserDTO;
-      const alreadyExist = await this.findByEmail(email);
-      if (alreadyExist) {
-        throw new BadRequestException('Email is already registerd');
+
+      if (role === 'merchant') {
+        const representativeEmailExist = await this.merchantModel.findOne({
+          where: { representativeEmail: email },
+        });
+
+        if (!representativeEmailExist) {
+          throw new BadRequestException('Email is not exist in merchant');
+        }
+      } else {
+        const alreadyExist = await this.findByEmail(email);
+        if (alreadyExist) {
+          throw new BadRequestException('Email is already registerd');
+        }
       }
 
       const salt = await bcrypt.genSalt();
@@ -144,27 +157,37 @@ export class UserService {
         { transaction: t },
       );
 
-      const customerRole = await this.roleModel.findOne({
-        where: { name: role },
+      const checkRole = await this.roleModel.findOne({
+        where: {
+          name: role,
+          id: {
+            [Op.notIn]: [3],
+          },
+        },
       });
 
-      if (!customerRole)
-        throw new BadRequestException('Role "customer" not found');
+      if (!checkRole) throw new BadRequestException('Role not found');
 
       await this.userRoleModel.create(
         {
           userId: user.id,
-          roleId: customerRole.id,
+          roleId: checkRole.id,
         } as any,
         { transaction: t },
       );
 
+      if (role === 'merchant') {
+        await this.merchantModel.update(
+          { ownerId: user.id },
+          { where: { representativeEmail: email }, transaction: t },
+        );
+      }
       await t.commit();
 
       await this.mailerService.sendMail({
         to: email,
         subject: 'Xác minh tài khoản của bạn',
-        template: './verify-otp', // tương ứng verify-otp.hbs
+        template: './verify-otp',
         context: {
           appName: 'Fastfood delivery',
           userEmail: email,

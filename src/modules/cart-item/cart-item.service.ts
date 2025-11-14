@@ -279,30 +279,6 @@ export class CartItemService {
     return null;
   }
 
-  // async findCartItemWithoutToppings(
-  //   cartId: number,
-  //   productId: number,
-  // ): Promise<CartItem | null> {
-  //   return await this.modelCartItem.findOne({
-  //     where: {
-  //       cartId: cartId,
-  //       productId: productId,
-  //     },
-  //     include: [
-  //       {
-  //         model: this.modelCartItemTopping,
-  //         required: false, // LEFT JOIN
-  //         attributes: [],
-  //       },
-  //     ],
-  //     having: this.sequelize.where(
-  //       this.sequelize.fn('COUNT', this.sequelize.col('cartItemToppings.id')),
-  //       0,
-  //     ),
-  //     group: ['CartItems.id'],
-  //   });
-  // }
-
   async getCartItemsById(idCart: number) {
     return await this.modelCartItem.findByPk(idCart);
   }
@@ -314,7 +290,6 @@ export class CartItemService {
     transaction?: any,
   ): Promise<any> {
     // Kiểm tra quyền sở hữu giỏ hàng
-    // const cart = await this.modelCart.findByPk(cartId);
     const cart = await this.modelCart.findByPk(cartId, {
       transaction,
       attributes: ['id', 'userId', 'merchantId'],
@@ -323,7 +298,6 @@ export class CartItemService {
       throw new BadRequestException('Không có quyền truy cập giỏ hàng này');
     }
 
-    // const merchant = await this.modelMerchant.findByPk(cart.merchantId);
     const merchant = await this.modelMerchant.findByPk(merchantId, {
       transaction,
       attributes: ['id', 'name'],
@@ -397,5 +371,47 @@ export class CartItemService {
         total,
       },
     };
+  }
+
+  async clearCart(userId: number, merchantId: number) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      // Lấy giỏ hàng bằng hàm đã có
+      const cart = await this.cartService.getCartByUserIdAndMerchant(
+        userId,
+        merchantId,
+        transaction,
+      );
+
+      if (!cart) {
+        await transaction.commit();
+        return; 
+      }
+
+      // Xóa tất cả cartItemTopping của cart
+      const cartItems = await this.modelCartItem.findAll({
+        where: { cartId: cart.id },
+        transaction,
+      });
+
+      const cartItemIds = cartItems.map((item) => item.id);
+
+      if (cartItemIds.length > 0) {
+        await this.modelCartItemTopping.destroy({
+          where: { cartItemId: cartItemIds },
+          transaction,
+        });
+
+        await this.modelCartItem.destroy({
+          where: { id: cartItemIds },
+          transaction,
+        });
+      }
+
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw new BadRequestException(error.message || 'Xóa giỏ hàng thất bại');
+    }
   }
 }

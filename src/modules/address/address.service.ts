@@ -24,30 +24,30 @@ export class AddressService {
     return newAddress;
   }
 
-  // async findAllByUser(userId: number) {
-  //   return this.addressModel.findAll({ where: { userId } });
-  // }
+  async findAllByUser(userId: number) {
+    return this.addressModel.findAll({ where: { userId } });
+  }
 
-  // async findOne(id: number, userId: number) {
-  //   const address = await this.addressModel.findOne({ where: { id, userId } });
-  //   if (!address) throw new NotFoundException('Không tìm thấy địa chỉ');
-  //   return address;
-  // }
+  async findOne(id: number, userId: number) {
+    const address = await this.addressModel.findOne({ where: { id, userId } });
+    if (!address) throw new NotFoundException('Không tìm thấy địa chỉ');
+    return address;
+  }
 
-  // async update(id: number, userId: number, updateAddressDto: UpdateAddressDto) {
-  //   const address = await this.findOne(id, userId);
-  //   await address.update({
-  //     ...updateAddressDto,
-  //     location: updateAddressDto.location
-  //       ? { type: 'Point', coordinates: updateAddressDto.location.coordinates }
-  //       : address.location,
-  //   } as any);
-  //   return address;
-  // }
+  async update(id: number, userId: number, updateAddressDto: UpdateAddressDto) {
+    const address = await this.findOne(id, userId);
+    await address.update({
+      ...updateAddressDto,
+      location: updateAddressDto.location
+        ? { type: 'Point', coordinates: updateAddressDto.location.coordinates }
+        : address.location,
+    } as any);
+    return address;
+  }
 
-  // async remove(id: number, userId: number) {
-  //   const address = await this.findOne(id, userId);
-  //   await address.destroy();
-  //   return { message: 'Đã xóa địa chỉ thành công' };
-  // }
+  async remove(id: number, userId: number) {
+    const address = await this.findOne(id, userId);
+    await address.destroy();
+    return { message: 'Đã xóa địa chỉ thành công' };
+  }
 }

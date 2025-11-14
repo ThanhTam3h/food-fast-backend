@@ -1,5 +1,4 @@
 import {
-  BadGatewayException,
   Body,
   Controller,
   Delete,
@@ -79,6 +78,13 @@ export class CartItemController {
     );
   }
 
+  @Delete('/clear/:merchantId')
+  @ApiBearerAuth('access-token')
+  async clearCart(@Req() req, @Param('merchantId') merchantId: number) {
+    const userId = req.user.id;
+    return await this.cartItemService.clearCart(userId, merchantId);
+  }
+
   @Delete('/:merchantId/:cartItemId')
   @ApiBearerAuth('access-token')
   async deleteCartItem(
@@ -99,45 +105,6 @@ export class CartItemController {
     );
   }
 
-  // @Get('/get-cartitems/:merchantId')
-  // @ApiBearerAuth('access-token')
-  // async getCartItemsByUser(
-  //   @Param('merchantId') merchantId: number,
-  //   @Req() req: Request,
-  // ) {
-  //   const transaction = await this.transaction.transaction();
-  //   try {
-  //     const userId = extractUserIdFromRequest(
-  //       req,
-  //       this.JWTservice,
-  //       this.configService,
-  //     );
-
-  //     const cart = await this.cartService.getCartByUserIdAndMerchant(
-  //       userId,
-  //       merchantId,
-  //       transaction,
-  //     );
-
-  //     if (!cart) {
-  //       await transaction.commit();
-  //       return { message: 'Giỏ hàng trống', data: [] };
-  //     }
-
-  //     const result = await this.cartItemService.getCartItemByCartId(
-  //       cart.id,
-  //       userId,
-  //       merchantId,
-  //       transaction,
-  //     );
-
-  //     await transaction.commit();
-  //     return result;
-  //   } catch (error) {
-  //     await transaction.rollback();
-  //     throw new BadGatewayException(error.message || 'Unknown error');
-  //   }
-  // }
   @Get('/get-cartitems/:merchantId')
   @ApiBearerAuth('access-token')
   async getCartItemsByUser(
@@ -150,7 +117,6 @@ export class CartItemController {
       this.configService,
     );
 
-    // DÙNG CLS + AUTOMATIC TRANSACTION (CÁCH DUY NHẤT AN TOÀN TRONG NESTJS)
     return await this.transaction.transaction(async (t) => {
       const cart = await this.cartService.getCartByUserIdAndMerchant(
         userId,

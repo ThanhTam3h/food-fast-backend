@@ -24,4 +24,18 @@ export class AuthController {
   async verifyOtp(@Body() verifyOtpDTO: VerifyOtpDTO) {
     return await this.authService.verifyOtp(verifyOtpDTO);
   }
+
+  @Post('/resend-otp')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+      },
+      required: ['email'],
+    },
+  })
+  async resendOtp(@Body('email') email: string) {
+    return await this.authService.resendOtp(email);
+  }
 }
