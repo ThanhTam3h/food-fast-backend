@@ -197,7 +197,7 @@ export class MerchantService {
 
   async findOne(merchantId: number) {
     const merchant = await this.merchantModel.findByPk(merchantId, {
-      attributes: ['id', 'name'],
+      attributes: ['id', 'name', 'representativeName'],
       include: [
         {
           model: this.addressModel,
@@ -217,7 +217,6 @@ export class MerchantService {
 
   async findAll() {
     const merchant = await this.merchantModel.findAll({
-      attributes: ['id', 'name', 'description'],
       include: [
         {
           model: this.addressModel,
@@ -226,8 +225,7 @@ export class MerchantService {
         },
         {
           model: this.merchantImageModel,
-          where: { type: 'BACKGROUND' },
-          attributes: ['url'],
+          attributes: ['url', 'type'],
           required: false,
         },
       ],
