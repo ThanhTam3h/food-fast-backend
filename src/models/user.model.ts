@@ -11,6 +11,7 @@ import { Address } from './address.model';
 import { Cart } from './cart.model';
 import { Role } from './role.model';
 import { UserRole } from './user_role.model';
+import { Merchant } from './merchant.model';
 
 @Table
 export class User extends Model<User> {
@@ -62,4 +63,7 @@ export class User extends Model<User> {
 
   @HasOne(() => Cart)
   declare cart: Cart;
+
+  @HasOne(() => Merchant, { foreignKey: 'ownerId' })
+  merchant: Merchant;
 }

@@ -38,12 +38,12 @@ export class CreateMerchantDto {
   @ApiProperty({ description: 'Email người đại diện' })
   @IsString()
   @IsOptional()
-  representativeEmail: string;
+  representativeEmail?: string;
 
   @ApiProperty({ description: 'Số điện thoại người đại diện' })
   @IsString()
   @IsOptional()
-  representativeMobile: string;
+  representativeMobile?: string;
 
   @ApiProperty({ description: 'Email cửa hàng' })
   @IsString()

@@ -81,7 +81,7 @@ export class MerchantController {
   async findMerchant(@Param('id') id: number) {
     return await this.merchantService.findOne(id);
   }
-
+  @Post('/validate-email')
   @Public()
   @Patch('/approve/:id')
   async approveMerchant(
