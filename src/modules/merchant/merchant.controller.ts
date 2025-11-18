@@ -23,6 +23,12 @@ export class MerchantController {
   constructor(private readonly merchantService: MerchantService) {}
 
   @Public()
+  @Post('/validate-email')
+  async validateEmailMerchant(@Body() body: { email: string }) {
+    return await this.merchantService.validateEmailMerchant(body.email);
+  }
+
+  @Public()
   @Post()
   @UseInterceptors(
     FileFieldsInterceptor(

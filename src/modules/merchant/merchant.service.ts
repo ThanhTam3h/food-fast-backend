@@ -47,7 +47,7 @@ export class MerchantService {
       await this.mailerService.sendMail({
         to: email,
         subject: 'Tiếp tục đăng ký để trở thành đối tác trên FastFood Delivery',
-        template: 'merchant/register-merchant',
+        template: './register-merchant',
         context: {
           userEmail: email,
           appName: 'FastFood Delivery',
