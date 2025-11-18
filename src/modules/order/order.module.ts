@@ -14,6 +14,7 @@ import { AddressModule } from '../address/address.module';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { StripeModule } from '../stripe/stripe.module';
+import { WebsocketModule } from '../websocket/websocket.module';
 
 @Module({
   controllers: [OrderController],
@@ -30,6 +31,7 @@ import { StripeModule } from '../stripe/stripe.module';
       Merchant
     ]),
     AddressModule,
+    WebsocketModule,
     forwardRef(() => StripeModule),
   ],
   exports: [OrderService],

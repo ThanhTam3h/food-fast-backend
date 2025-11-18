@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UploadedFiles,
   UseInterceptors,
@@ -47,6 +48,16 @@ export class MerchantController {
     return this.merchantService.registerMerchant(createMerchantDto, files);
   }
 
+  @Public()
+  @Get('nearby')
+  async getNearby(
+    @Query('lat') lat: number,
+    @Query('lng') lng: number,
+    @Query('radius') radius: number = 100,
+  ) {
+    return this.merchantService.findNearby(lat, lng, radius);
+  }
+
   @Patch(':id')
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -80,6 +91,12 @@ export class MerchantController {
   @Get(':id')
   async findMerchant(@Param('id') id: number) {
     return await this.merchantService.findOne(id);
+  }
+
+  @Public()
+  @Get('')
+  async findAllMerchants() {
+    return await this.merchantService.findAll();
   }
 
   @Public()

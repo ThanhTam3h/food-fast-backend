@@ -18,6 +18,7 @@ import {
 } from 'src/models';
 import { OrderStatus, PaymentStatus } from 'src/models/order.model';
 import { AddressService } from '../address/address.service';
+import { OrderStatusGateway } from '../websocket/order-status.gateway';
 import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
@@ -33,6 +34,7 @@ export class OrderService {
     @InjectModel(Product) private readonly productModel: typeof Product,
     @InjectModel(Topping) private readonly toppingModel: typeof Topping,
     private readonly addressService: AddressService,
+    private readonly orderStatusGateway: OrderStatusGateway,
     private readonly sequelize: Sequelize,
   ) {}
 
@@ -231,6 +233,18 @@ export class OrderService {
 
     Object.assign(order, updateData);
     await order.save();
+
+    // Emit realtime
+    if (updateData.status) {
+      // payload có thể là minimal hoặc full order
+      const payload = {
+        orderNumber,
+        status: updateData.status,
+        updatedAt: order.updatedAt,
+      };
+
+      this.orderStatusGateway.emitOrderStatusUpdate(orderNumber, payload);
+    }
     return order;
   }
 
@@ -239,7 +253,7 @@ export class OrderService {
       const order = await this.orderModel.findAll({
         where: { orderNumber },
         attributes: {
-          exclude: ['stripePaymentIntentId'], // Exclude these attributes
+          exclude: ['stripePaymentIntentId'],
         },
         include: [
           {
@@ -282,6 +296,66 @@ export class OrderService {
       });
       return order;
     } catch (error) {
+      throw error;
+    }
+  }
+
+  async getOrdersByMerchantId(merchantId: number, status?: string) {
+    try {
+      const whereClause: any = { merchantId };
+      if (status) {
+        whereClause.status = status;
+      }
+
+      const orders = await this.orderModel.findAll({
+        where: whereClause,
+        attributes: {
+          exclude: ['stripePaymentIntentId'],
+        },
+        include: [
+          {
+            model: this.merchantModel,
+            attributes: ['id', 'name'],
+            include: [
+              {
+                model: this.addressModel,
+                attributes: ['id', 'street', 'location'],
+              },
+            ],
+          },
+          {
+            model: this.userModel,
+            attributes: ['id', 'email', 'phone'],
+          },
+          {
+            model: this.addressModel,
+            attributes: ['id', 'street', 'location'],
+          },
+          {
+            model: this.orderItemModel,
+            include: [
+              {
+                model: this.productModel,
+                attributes: ['id', 'name', 'basePrice', 'image'],
+              },
+              {
+                model: this.orderItemToppingModel,
+                include: [
+                  {
+                    model: Topping,
+                    attributes: ['id', 'name', 'price'],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        order: [['createdAt', 'DESC']],
+      });
+
+      return orders;
+    } catch (error) {
+      console.error('Error getOrdersByMerchantId:', error);
       throw error;
     }
   }
