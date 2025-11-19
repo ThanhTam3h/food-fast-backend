@@ -44,7 +44,6 @@ export class CartItemService {
 
     try {
       const { productId, quantity, selectedToppingIds = [] } = dataAdd;
-      console.log(selectedToppingIds);
       if (quantity <= 0) {
         throw new BadGatewayException('Số lượng biến thể phải lớn hơn 0 !!!');
       }

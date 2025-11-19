@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UploadedFiles,
   UseInterceptors,
@@ -20,6 +21,12 @@ import { MerchantService } from './merchant.service';
 @Controller('merchants')
 export class MerchantController {
   constructor(private readonly merchantService: MerchantService) {}
+
+  @Public()
+  @Post('/validate-email')
+  async validateEmailMerchant(@Body() body: { email: string }) {
+    return await this.merchantService.validateEmailMerchant(body.email);
+  }
 
   @Public()
   @Post()
@@ -45,6 +52,16 @@ export class MerchantController {
     },
   ) {
     return this.merchantService.registerMerchant(createMerchantDto, files);
+  }
+
+  @Public()
+  @Get('nearby')
+  async getNearby(
+    @Query('lat') lat: number,
+    @Query('lng') lng: number,
+    @Query('radius') radius: number = 100,
+  ) {
+    return this.merchantService.findNearby(lat, lng, radius);
   }
 
   @Patch(':id')
@@ -82,6 +99,12 @@ export class MerchantController {
     return await this.merchantService.findOne(id);
   }
   @Post('/validate-email')
+  @Public()
+  @Get('')
+  async findAllMerchants() {
+    return await this.merchantService.findAll();
+  }
+
   @Public()
   @Patch('/approve/:id')
   async approveMerchant(

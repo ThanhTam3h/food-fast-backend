@@ -6,10 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
-import { Public } from 'src/common/decorators/global-guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Order, PaymentMethod } from 'src/models/order.model';
 import { StripeService } from '../stripe/stripe.service';
@@ -69,7 +69,6 @@ export class OrderController {
     }
   }
 
-  @Public()
   @ApiParam({
     name: 'orderNumber',
     required: true,
@@ -89,16 +88,52 @@ export class OrderController {
     },
   })
   @Patch('update/:orderNumber')
+  @ApiBearerAuth('access-token')
+  // @Roles('merchant', 'admin')
   async updateOrderInfo(
+    @Req() req: any,
     @Param('orderNumber') orderNumber: string,
     @Body() updateData: Partial<Order>,
   ) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new BadRequestException('Missing user ID');
+    }
     return this.orderService.updateOrderInfo(orderNumber, updateData);
   }
 
-  @Public()
+  @Get('merchant/:merchantId')
+  @ApiBearerAuth('access-token')
+  @Roles('merchant', 'admin')
+  async getOrdersByMerchant(
+    @Param('merchantId') merchantId: number,
+    @Req() req: any,
+    @Query('status') status?: string,
+  ) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new BadRequestException('Missing user ID');
+    }
+
+    const finalStatus = status && status !== '[]' ? status : undefined;
+
+    return await this.orderService.getOrdersByMerchantId(
+      merchantId,
+      finalStatus,
+    );
+  }
+
   @Get('/:orderNumber')
-  async getOrderItemsByOrderId(@Param('orderNumber') orderNumber: string) {
+  // @ApiBearerAuth('access-token')
+  // @Roles('merchant', 'admin')
+  async getOrderItemsByOrderId(
+    @Req() req: any,
+    @Param('orderNumber') orderNumber: string,
+  ) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new BadRequestException('Missing user ID');
+    }
     return this.orderService.getOrderItemsByOrderId(orderNumber);
   }
 }

@@ -14,12 +14,21 @@ import { OrderItem } from './order_item.model';
 import { User } from './user.model';
 
 export enum OrderStatus {
-  PENDING = 'Đang chờ',
-  CONFIRMED = 'Đã xác nhận',
-  CANCELLED = 'Đã hủy',
-  PREPARING = 'Đang chuẩn bị',
-  READY = 'Sẵn sàng',
-  DELIVERED = 'Đã giao hàng',
+  // PENDING = 'Đang chờ',
+  // CONFIRMED = 'Đã xác nhận',
+  // PREPARING = 'Đang chuẩn bị',
+  // READY = 'Sẵn sàng',
+  // DELIVERING = 'Đang giao hàng',
+  // DELIVERED = 'Đã giao hàng',
+  // CANCELLED = 'Đã hủy',
+
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  PREPARING = 'PREPARING',
+  READY = 'READY',
+  DELIVERING = 'DELIVERING',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
 }
 
 export enum PaymentMethod {

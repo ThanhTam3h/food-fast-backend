@@ -34,6 +34,7 @@ import { StripeModule } from './modules/stripe/stripe.module';
 import { ToppingGroupModule } from './modules/topping-group/topping-group.module';
 import { ToppingModule } from './modules/topping/topping.module';
 import { UserModule } from './modules/user/user.module';
+import { WebsocketModule } from './modules/websocket/websocket.module';
 
 @Module({
   imports: [
@@ -96,6 +97,7 @@ import { UserModule } from './modules/user/user.module';
     ToppingGroupModule,
     ProductToppingGroupModule,
     CloudinaryModule,
+    WebsocketModule,
   ],
   providers: [
     {

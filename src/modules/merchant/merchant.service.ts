@@ -47,7 +47,7 @@ export class MerchantService {
       await this.mailerService.sendMail({
         to: email,
         subject: 'Tiếp tục đăng ký để trở thành đối tác trên FastFood Delivery',
-        template: 'merchant/register-merchant',
+        template: './register-merchant',
         context: {
           userEmail: email,
           appName: 'FastFood Delivery',
@@ -202,15 +202,78 @@ export class MerchantService {
         {
           model: this.addressModel,
           attributes: ['street', 'location'],
+          required: false,
         },
         {
           model: this.merchantImageModel,
           where: { type: 'BACKGROUND' },
           attributes: ['url'],
+          required: false,
         },
       ],
     });
     return merchant;
+  }
+
+  async findAll() {
+    const merchant = await this.merchantModel.findAll({
+      attributes: ['id', 'name', 'description'],
+      include: [
+        {
+          model: this.addressModel,
+          attributes: ['street', 'location'],
+          required: false,
+        },
+        {
+          model: this.merchantImageModel,
+          where: { type: 'BACKGROUND' },
+          attributes: ['url'],
+          required: false,
+        },
+      ],
+    });
+    return merchant;
+  }
+
+  async findNearby(lat: number, lng: number, radiusKm = 5) {
+    // Chuyển radius sang mét vì PostGIS ST_DWithin sử dụng mét
+    const radiusMeters = radiusKm * 1000;
+
+    const merchants = await this.merchantModel.findAll({
+      include: [
+        {
+          model: Address,
+          required: true,
+        },
+        {
+          model: MerchantImage,
+          required: false,
+          where: { type: 'BACKGROUND' }, // chỉ lấy ảnh nền
+        },
+      ],
+      where: this.sequelize.literal(`
+        ST_DWithin(
+          "address"."location",
+          ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography,
+          ${radiusMeters}
+        )
+      `),
+      attributes: {
+        include: [
+          [
+            this.sequelize.literal(`
+              ST_Distance(
+                "address"."location",
+                ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography
+              )
+            `),
+            'distance',
+          ],
+        ],
+      },
+    });
+
+    return merchants;
   }
 
   async updateMerchant(
