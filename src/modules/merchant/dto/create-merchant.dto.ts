@@ -85,6 +85,7 @@ export class CreateMerchantDto {
     example: 100,
   })
   @IsNumber()
+  @Type(() => Number)
   @IsOptional()
   dailyOrderVolume: number;
 
