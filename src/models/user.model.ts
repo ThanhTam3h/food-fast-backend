@@ -22,7 +22,7 @@ export class User extends Model<User> {
   declare username: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
-  declare password: string;
+declare password: string | null;
 
   @Column({ allowNull: true, type: DataType.STRING })
   declare avatar: string;
