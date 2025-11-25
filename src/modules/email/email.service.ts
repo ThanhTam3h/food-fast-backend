@@ -3,17 +3,16 @@ import axios from 'axios';
 
 @Injectable()
 export class EmailService {
-  async sendOtpEmail(to: string, otp: string) {
+  async sendMail({ to, subject, html }) {
     const API_KEY = process.env.MAILERSEND_API_KEY;
-    const FROM = process.env.MAIL_FROM;
 
-    await axios.post(
+    return await axios.post(
       'https://api.mailersend.com/v1/email',
       {
-        from: { email: FROM },
+        from: { email: process.env.MAIL_FROM },
         to: [{ email: to }],
-        subject: 'Your OTP Code',
-        html: `<p>Your OTP code is: <b>${otp}</b></p>`,
+        subject,
+        html,
       },
       {
         headers: {

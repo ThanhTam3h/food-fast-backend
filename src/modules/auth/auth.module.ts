@@ -8,6 +8,8 @@ import { JWTAuthGuard } from './guards/jwt.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtStrategy } from './passport/jwt.strategy';
 import { LocalStrategy } from './passport/local.strategy';
+import { EmailModule } from '../email/email.module';
+
 
 @Module({
   controllers: [AuthController],
@@ -18,7 +20,7 @@ import { LocalStrategy } from './passport/local.strategy';
     JwtStrategy,
     JWTAuthGuard,
   ],
-  imports: [UserModule, SequelizeModule.forFeature([User])],
+  imports: [UserModule, EmailModule, SequelizeModule.forFeature([User])],
   exports: [AuthService],
 })
 export class AuthModule {}
