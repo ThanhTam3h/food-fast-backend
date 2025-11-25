@@ -74,8 +74,7 @@ import { WebsocketModule } from './modules/websocket/websocket.module';
     adapter: new HandlebarsAdapter(),
     options: { strict: true },
   },
-});
-
+}),
 
     ProductModule,
     ToppingModule,
