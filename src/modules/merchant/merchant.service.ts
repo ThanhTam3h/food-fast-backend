@@ -77,13 +77,32 @@ if (existEmail) {
   throw new BadRequestException('Email is already registered');
 }
 
-      // Tạo email cho user
-      // await this.userModel.create(
-      //   { email: createMerchantDto.representativeEmail } as any,
-      //   {
-      //     transaction: t,
-      //   },
-      // );
+      let user = await this.userModel.findOne({
+  where: { email: createMerchantDto.representativeEmail },
+});
+
+if (!user) {
+  user = await this.userModel.create(
+    {
+      email: createMerchantDto.representativeEmail,
+      password: null, // không dùng password để login
+      provider: 'MERCHANT_REGISTER',
+    },
+    { transaction: t },
+  );
+
+  // 2. Tạo role PARTNER trong bảng UserRoles
+  await this.sequelize.models.UserRoles.create(
+    {
+      userId: user.id,
+      roleId: 2, // 1 = PARTNER (bạn kiểm tra trong database)
+    },
+    { transaction: t },
+  );
+}
+
+// 3. Gán ownerId vào DTO để lưu vào Merchant
+(createMerchantDto as any).ownerId = user.id;
 
       // Tạo địa chỉ
       const address = await this.addressModel.create(
