@@ -46,7 +46,7 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionFilter());
 
   app.enableCors({
-    origin: ['https://frontend-foodfast.vercel.app','http://localhost:3001'], // URL mặc định Vite
+    origin: ['https://food-fast-frontend.vercel.app','http://localhost:3001'], // URL mặc định Vite
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
