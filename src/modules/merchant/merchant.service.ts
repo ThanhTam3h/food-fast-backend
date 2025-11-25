@@ -69,21 +69,13 @@ export class MerchantService {
     const t = await this.sequelize.transaction();
     try {
       // Check email
-      const existEmail = await this.userModel.findOne({
-        where: { email: createMerchantDto.representativeEmail },
-        include: [
-          {
-            model: this.merchantModel,
-            where: {
-              representativeEmail: createMerchantDto.representativeEmail,
-            },
-          },
-        ],
-      });
+      const existEmail = await this.merchantModel.findOne({
+  where: { representativeEmail: createMerchantDto.representativeEmail },
+});
 
-      if (existEmail) {
-        throw new BadRequestException('Email is already registerd');
-      }
+if (existEmail) {
+  throw new BadRequestException('Email is already registered');
+}
 
       // Tạo email cho user
       // await this.userModel.create(
