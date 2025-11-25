@@ -46,8 +46,8 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionFilter());
 
   app.enableCors({
-    origin: 'http://localhost:3001', // URL mặc định Vite
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: ['https://frontend-foodfast.vercel.app','http://localhost:3001'], // URL mặc định Vite
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
 
@@ -72,9 +72,10 @@ async function bootstrap() {
   SwaggerModule.setup('api/v1/docs', app, document);
 
   const port = configService.get<string>('PORT') || 3000;
+  const PUBLIC_DOMAIN = 'https://food-fast-backend-production.up.railway.app';
 
-  logger.log(`Server started on ${port}`);
-  logger.log(`Swagger running on http://localhost:${port}/api/v1/docs`);
+  logger.log(`Server startedand available at ${PUBLIC_DOMAIN}/api/v1`);
+  logger.log(`Swagger running on ${PUBLIC_DOMAIN}/api/v1/docs`);
 
   await app.listen(port);
 }

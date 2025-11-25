@@ -64,4 +64,11 @@ export const sequelizeConfig = (
   ],
   autoLoadModels: true,
   logging: false,
+
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
+  },
 });
