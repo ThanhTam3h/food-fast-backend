@@ -89,7 +89,7 @@ import { WebsocketModule } from './modules/websocket/websocket.module';
       },
     },
   }),
-})
+}),
 
     ProductModule,
     ToppingModule,
