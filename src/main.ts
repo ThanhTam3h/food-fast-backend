@@ -10,27 +10,23 @@ import { TransformInterceptor } from './common/interceptors/response.interceptor
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+   app.enableCors({
+    origin: ['https://food-fast-frontend.vercel.app','http://localhost:3001'], // URL mặc định Vite
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
+
   const logger = new Logger('bootstrap');
 
   const configService = new ConfigService();
 
   app.setGlobalPrefix('api/v1');
 
-  app.use((req, res, next) => {
-    if (req.originalUrl === '/api/v1/stripe/webhook') {
-      // Stripe webhook cần raw body để verify chữ ký
-      express.json({
-        verify: (req: any, res, buf) => {
-          req.rawBody = buf;
-        },
-      })(req, res, next);
-    } else {
-      // Các route bình thường
-      express.json()(req, res, next);
-    }
-  });
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true }));
 
-  app.use(urlencoded({ extended: true }));
+  // Raw body only for Stripe
+  app.use('/api/v1/stripe/webhook', express.raw({ type: '*/*' }));
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -45,11 +41,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalFilters(new AllExceptionFilter());
 
-  app.enableCors({
-    origin: ['https://food-fast-frontend.vercel.app','http://localhost:3001'], // URL mặc định Vite
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,
-  });
+ 
 
   const config = new DocumentBuilder()
     .setTitle('FastFood Delivery APIs')
