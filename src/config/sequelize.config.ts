@@ -37,7 +37,7 @@ export const sequelizeConfig = (
     ? Number(configService.get<number>('DB_PORT'))
     : 5432,
   dialect: configService.get<Dialect>('DB_DIALECT') ?? 'postgres',
-  synchronize: true,
+  synchronize: false,
   models: [
     // Cha
     Topping,
