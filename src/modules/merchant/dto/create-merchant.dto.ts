@@ -20,10 +20,10 @@ export class RegisterImageDto {
 export class CreateMerchantDto {
   // --- 1. Thông tin cửa hàng / cơ bản ---
 
-  @ApiProperty({ description: 'Tên cửa hàng' })
-  @IsNumber()
-  @IsNotEmpty()
-  ownerId: number;
+  // @ApiProperty({ description: 'Tên cửa hàng' })
+  // @IsNumber()
+  // @IsNotEmpty()
+  // ownerId: number;
 
   @ApiProperty({ description: 'Tên cửa hàng' })
   @IsString()

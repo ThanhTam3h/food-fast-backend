@@ -160,9 +160,6 @@ export class UserService {
       const checkRole = await this.roleModel.findOne({
         where: {
           name: role,
-          id: {
-            [Op.notIn]: [3],
-          },
         },
       });
 

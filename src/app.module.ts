@@ -27,6 +27,8 @@ import { CartItemModule } from './modules/cart-item/cart-item.module';
 import { CartPreviewModule } from './modules/cart-preview/cart-preview.module';
 import { CartModule } from './modules/cart/cart.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { DroneHubModule } from './modules/drone-hub/drone-hub.module';
+import { DroneModule } from './modules/drone/drone.module';
 import { OrderModule } from './modules/order/order.module';
 import { ProductToppingGroupModule } from './modules/product-topping-group/product-topping-group.module';
 import { ProductModule } from './modules/product/product.module';
@@ -98,6 +100,8 @@ import { WebsocketModule } from './modules/websocket/websocket.module';
     ProductToppingGroupModule,
     CloudinaryModule,
     WebsocketModule,
+    DroneModule,
+    DroneHubModule,
   ],
   providers: [
     {

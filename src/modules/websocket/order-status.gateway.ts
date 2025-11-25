@@ -8,6 +8,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { DroneStatus } from 'src/models/drone.model';
 
 @WebSocketGateway({
   cors: {
@@ -15,6 +16,7 @@ import { Server, Socket } from 'socket.io';
     methods: ['GET', 'POST'],
     credentials: true,
   },
+  transports: ['websocket'],
 })
 export class OrderStatusGateway
   implements OnGatewayConnection, OnGatewayDisconnect
@@ -50,15 +52,38 @@ export class OrderStatusGateway
   }
 
   // Hàm để các service khác gọi khi cần broadcast
-  emitOrderStatusUpdate(orderNumber: string, payload: any) {
-    const room = this.getOrderRoom(orderNumber);
-    // Emit tới room (chỉ client đã join room sẽ nhận)
-    this.server.to(room).emit('orderStatusUpdated', payload);
-    // Nếu muốn broadcast toàn server: this.server.emit('orderStatusUpdated', payload)
-  }
+  // emitOrderStatusUpdate(orderNumber: string, payload: any) {
+  //   const room = this.getOrderRoom(orderNumber);
+  //   // Emit tới room (chỉ client đã join room sẽ nhận)
+  //   this.server.to(room).emit('orderStatusUpdated', payload);
+  //   // Nếu muốn broadcast toàn server: this.server.emit('orderStatusUpdated', payload)
+  // }
 
   // Option: emit cho merchant (ví dụ merchant_{merchantId})
   emitToMerchant(merchantId: number | string, event: string, payload: any) {
     this.server.to(`merchant_${merchantId}`).emit(event, payload);
+  }
+
+  // emitDroneStatus(droneId: number, status: DroneStatus) {
+  //   this.server.emit(`drone_${droneId}`, {
+  //     droneId,
+  //     status,
+  //     timestamp: new Date(),
+  //   });
+  // }
+
+  emitDroneStatus(droneId: number, status: DroneStatus) {
+    this.server.emit('drone-status', { droneId, status });
+  }
+
+  emitOrderStatusUpdate(orderNumber: string, payload: any) {
+    const room = `order_${orderNumber}`;
+    this.server.to(room).emit('order-status-update', payload);
+    // Broadcast cho admin luôn thấy
+    this.server.emit('order-status-update', payload);
+  }
+
+  emitDronePosition(orderNumber: string, data: any) {
+    this.server.emit('drone-position-update', { orderNumber, ...data });
   }
 }

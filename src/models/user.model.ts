@@ -11,6 +11,7 @@ import { Address } from './address.model';
 import { Cart } from './cart.model';
 import { Role } from './role.model';
 import { UserRole } from './user_role.model';
+import { Merchant } from './merchant.model';
 
 @Table
 export class User extends Model<User> {
@@ -20,7 +21,7 @@ export class User extends Model<User> {
   @Column({ allowNull: true, unique: true, type: DataType.STRING })
   declare username: string;
 
-  @Column({ allowNull: false, type: DataType.STRING })
+  @Column({ allowNull: true, type: DataType.STRING })
   declare password: string;
 
   @Column({ allowNull: true, type: DataType.STRING })
@@ -53,6 +54,9 @@ export class User extends Model<User> {
 
   @HasMany(() => UserRole)
   declare userRoles: UserRole[];
+
+  @HasOne(() => Merchant, 'ownerId')
+  declare merchant: Merchant;
 
   // @HasMany(() => UserRole)
   // userRoles: UserRole[];

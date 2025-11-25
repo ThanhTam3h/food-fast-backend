@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -42,9 +42,9 @@ export class UpdateProductDto {
   @IsString()
   image?: string;
 
-  @ApiProperty()
-  @IsBoolean()
+  @ApiProperty({ example: true, type: Boolean })
   @IsOptional()
+  @IsBoolean({ message: 'isActive phải là true hoặc false' })
   isActive: boolean;
 
   @ApiProperty({ example: 2 })

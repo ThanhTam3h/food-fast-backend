@@ -14,6 +14,7 @@ import {
   ToppingGroup,
 } from 'src/models';
 import { CategoryService } from '../category/category.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { filterProductDto } from './dto/filter-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -29,6 +30,7 @@ export class ProductService {
     @InjectModel(Topping) private readonly modelTopping: typeof Topping,
     @InjectModel(Category) private readonly modelCategory: typeof Category,
     private readonly categoryService: CategoryService,
+    private readonly cloudinaryService: CloudinaryService,
     private readonly sequelize: Sequelize,
   ) {}
 
@@ -93,7 +95,7 @@ export class ProductService {
       product?.productToppingGroups?.flatMap(
         (group) => group?.toppingGroup?.toppings || [],
       ) || [];
-    
+
     console.log('Gom tất cả topping của sản phẩm', allToppings);
 
     // --- Lọc topping người dùng chọn ---
@@ -101,7 +103,7 @@ export class ProductService {
       selectedToppingIds.includes(t.id),
     );
 
-    console.log("Lọc:", selectedToppingIds)
+    console.log('Lọc:', selectedToppingIds);
 
     // --- Validate theo nhóm topping ---
     for (const group of product?.productToppingGroups || []) {
@@ -146,7 +148,7 @@ export class ProductService {
     };
   }
 
-  async createProduct(dto: CreateProductDto) {
+  async createProduct(dto: CreateProductDto, file?: Express.Multer.File) {
     const transaction = await this.sequelize.transaction();
     try {
       const category = await this.categoryService.findOneCategory(
@@ -155,12 +157,17 @@ export class ProductService {
       if (!category)
         throw new BadRequestException('Không tìm thấy danh mục sản phẩm');
 
+      let imageUrl = dto.image;
+      if (file) {
+        imageUrl = await this.cloudinaryService.uploadImage(file, 'merchants');
+      }
+
       const product = await this.modelProduct.create(
         {
           name: dto.name,
           description: dto.description,
           basePrice: dto.basePrice,
-          image: dto.image,
+          image: imageUrl,
           isActive: dto.isActive,
           categoryId: dto.categoryId,
           merchantId: dto.merchantId,
@@ -195,50 +202,100 @@ export class ProductService {
     }
   }
 
-  async updateProduct(id: number, dto: UpdateProductDto) {
+  async updateProduct(
+    id: number,
+    dto: UpdateProductDto,
+    file?: Express.Multer.File,
+  ) {
     const transaction = await this.sequelize.transaction();
     try {
-      const product = await this.modelProduct.findByPk(id);
-      if (!product) throw new BadRequestException('Không tìm thấy sản phẩm');
+      // 1. Tìm sản phẩm
+      const product = await this.modelProduct.findByPk(id, { transaction });
+      if (!product) {
+        throw new BadRequestException('Không tìm thấy sản phẩm');
+      }
 
+      // 2. XỬ LÝ ẢNH – DÙNG ĐÚNG HÀM BẠN ĐÃ CÓ
+      let imageUrl = product.image; // giữ ảnh cũ nếu không upload
+
+      if (file) {
+        try {
+          // Upload ảnh mới lên Cloudinary (dùng đúng hàm bạn có)
+          imageUrl = await this.cloudinaryService.uploadImage(
+            file,
+            'merchants',
+          );
+
+          // Xóa ảnh cũ nếu tồn tại và là ảnh Cloudinary
+          if (product.image && product.image.includes('cloudinary.com')) {
+            await this.cloudinaryService.deleteImageByUrl(product.image);
+          }
+        } catch (uploadError) {
+          console.error('Upload ảnh thất bại:', uploadError);
+          throw new BadRequestException(
+            'Upload ảnh thất bại. Vui lòng thử lại.',
+          );
+        }
+      }
+      // 3. CẬP NHẬT THÔNG TIN SẢN PHẨM
       await this.modelProduct.update(
         {
           name: dto.name ?? product.name,
           description: dto.description ?? product.description,
-          image: dto.image ?? product.image,
+          image: imageUrl,
           basePrice: dto.basePrice ?? product.basePrice,
           isActive: dto.isActive,
           categoryId: dto.categoryId ?? product.categoryId,
-          merchantId: dto.merchantId,
+          merchantId: dto.merchantId ?? product.merchantId,
         },
         { where: { id }, transaction },
       );
 
-      if (dto.productToppingGroups) {
+      // 4. CẬP NHẬT TOPPING GROUPS (xóa cũ → thêm mới)
+      if (dto.productToppingGroups !== undefined) {
         await this.modelProductToppingGroup.destroy({
           where: { productId: id },
           transaction,
         });
 
         if (dto.productToppingGroups.length > 0) {
-          const groupIds = dto.productToppingGroups.map(
-            (g) => g.toppingGroupId,
-          );
-          const mapping = groupIds.map((gid) => ({
-            product_id: id,
-            toppingGroupId: gid,
+          const mappings = dto.productToppingGroups.map((item) => ({
+            productId: id,
+            toppingGroupId: item.toppingGroupId,
           }));
-          await this.modelProductToppingGroup.bulkCreate(mapping as any, {
+
+          await this.modelProductToppingGroup.bulkCreate(mappings as any, {
             transaction,
           });
         }
       }
 
+      // 5. Commit và trả về kết quả
       await transaction.commit();
-      return { message: 'Cập nhật sản phẩm thành công' };
-    } catch (err) {
+
+      const updatedProduct = await this.modelProduct.findByPk(id, {
+        include: [
+          {
+            model: ProductToppingGroup,
+            as: 'productToppingGroups',
+            attributes: ['toppingGroupId'],
+          },
+        ],
+      });
+
+      return {
+        success: true,
+        message: 'Cập nhật sản phẩm thành công!',
+        data: updatedProduct,
+      };
+    } catch (error) {
       await transaction.rollback();
-      throw new BadGatewayException(err.message);
+      console.error('Lỗi cập nhật sản phẩm:', error);
+
+      if (error instanceof BadRequestException) throw error;
+      throw new BadRequestException(
+        error.message || 'Cập nhật sản phẩm thất bại',
+      );
     }
   }
 
@@ -258,14 +315,21 @@ export class ProductService {
       };
 
     const page = filter.page ?? 1;
-    const limit = filter.limit ?? 10;
+    const limit = filter.limit ?? 100;
     const offset = (page - 1) * limit;
 
     const result = await this.modelProduct.findAndCountAll({
       where,
       limit,
       offset,
-      attributes: ['id', 'name', 'basePrice', 'description', 'image', 'isActive'],
+      attributes: [
+        'id',
+        'name',
+        'basePrice',
+        'description',
+        'image',
+        'isActive',
+      ],
       include: [
         {
           model: this.modelProductToppingGroup,

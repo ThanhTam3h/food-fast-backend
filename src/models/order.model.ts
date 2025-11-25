@@ -110,4 +110,7 @@ export class Order extends Model<Order> {
 
   @HasMany(() => OrderItem)
   declare orderItems: OrderItem[];
+
+  @BelongsTo(() => Drone)
+  drone: Drone;
 }

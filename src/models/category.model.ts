@@ -18,10 +18,10 @@ export class Category extends Model<Category> {
   @Column({ allowNull: true, type: DataType.TEXT })
   declare description: string;
 
-  @Column({ allowNull: false, type: DataType.STRING })
+  @Column({ allowNull: true, type: DataType.STRING })
   declare image: string;
 
-  @Column({ allowNull: false, type: DataType.BOOLEAN })
+  @Column({ allowNull: false, type: DataType.BOOLEAN , defaultValue: true})
   declare isActive: boolean;
 
   @ForeignKey(() => Merchant)

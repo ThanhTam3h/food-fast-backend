@@ -4,11 +4,15 @@ import {
   Delete,
   Get,
   Param,
+  ParseBoolPipe,
   Patch,
   Post,
-  Put,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { Public } from 'src/common/decorators/global-guard';
 import { CreateProductDto } from './dto/create-product.dto';
 import { filterProductDto } from './dto/filter-product.dto';
@@ -21,8 +25,15 @@ export class ProductController {
 
   @Public()
   @Post('/create')
-  async createProduct(@Body() createData: CreateProductDto) {
-    return this.productService.createProduct(createData);
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  async createProduct(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createData: CreateProductDto,
+  ) {
+    console.log('File received:', file);
+    console.log('DTO received:', createData);
+
+    return this.productService.createProduct(createData, file);
   }
 
   @Public()
@@ -38,6 +49,21 @@ export class ProductController {
   }
 
   @Public()
+  @Patch('/update/:id')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  async updateProduct(
+    @Param('id') id: number,
+    @Body() updateData: UpdateProductDto,
+    @Body('isActive', new ParseBoolPipe()) isActive: boolean,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    updateData.isActive = isActive;
+    console.log(isActive, updateData.isActive)
+    console.log('File nhận được:', file?.originalname);
+    return this.productService.updateProduct(+id, updateData, file);
+  }
+
+  @Public()
   @Delete('/softdelete/:id')
   async softDeleteProduct(@Param('id') id: number) {
     return await this.productService.softDeteleProduct(id);
@@ -47,14 +73,5 @@ export class ProductController {
   @Delete('/harddelete/:id')
   async hardDeleteProduct(@Param('id') id: number) {
     return await this.productService.hardDeleteProduct(id);
-  }
-
-  @Public()
-  @Patch('/update/:id')
-  async updateProduct(
-    @Param('id') id: number,
-    @Body() updateData: UpdateProductDto,
-  ) {
-    return await this.productService.updateProduct(id, updateData);
   }
 }

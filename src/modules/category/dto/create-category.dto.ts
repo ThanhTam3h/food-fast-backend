@@ -8,6 +8,7 @@ export class CreateCategoryDTO {
 
   @ApiProperty()
   @IsString()
+  @IsOptional()
   image?: string;
 
   @ApiProperty()

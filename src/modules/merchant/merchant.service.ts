@@ -25,7 +25,7 @@ export class MerchantService {
     private readonly merchantModel: typeof Merchant,
 
     @InjectModel(Address)
-    private readonly addressModel: typeof Merchant,
+    private readonly addressModel: typeof Address,
 
     @InjectModel(MerchantImage)
     private readonly merchantImageModel: typeof MerchantImage,
@@ -86,17 +86,17 @@ export class MerchantService {
       }
 
       // Tạo email cho user
-      await this.userModel.create(
-        { email: createMerchantDto.representativeEmail } as any,
-        {
-          transaction: t,
-        },
-      );
+      // await this.userModel.create(
+      //   { email: createMerchantDto.representativeEmail } as any,
+      //   {
+      //     transaction: t,
+      //   },
+      // );
 
       // Tạo địa chỉ
-      const address = await this.addressService.create(
-        createMerchantDto.ownerId,
-        createMerchantDto.temporaryAddress,
+      const address = await this.addressModel.create(
+        // createMerchantDto.ownerId,
+        createMerchantDto.temporaryAddress as any,
       );
 
       let addressId = address.id;
@@ -197,7 +197,6 @@ export class MerchantService {
 
   async findOne(merchantId: number) {
     const merchant = await this.merchantModel.findByPk(merchantId, {
-      attributes: ['id', 'name'],
       include: [
         {
           model: this.addressModel,
@@ -206,8 +205,7 @@ export class MerchantService {
         },
         {
           model: this.merchantImageModel,
-          where: { type: 'BACKGROUND' },
-          attributes: ['url'],
+
           required: false,
         },
       ],
@@ -217,20 +215,7 @@ export class MerchantService {
 
   async findAll() {
     const merchant = await this.merchantModel.findAll({
-      attributes: ['id', 'name', 'description'],
-      include: [
-        {
-          model: this.addressModel,
-          attributes: ['street', 'location'],
-          required: false,
-        },
-        {
-          model: this.merchantImageModel,
-          where: { type: 'BACKGROUND' },
-          attributes: ['url'],
-          required: false,
-        },
-      ],
+      include: { all: true },
     });
     return merchant;
   }
@@ -278,13 +263,13 @@ export class MerchantService {
 
   async updateMerchant(
     merchantId: number,
-    userId: number,
+
     updateMerchantDto: UpdateMerchantDto,
     filesByType?: Record<string, Express.Multer.File[]>,
   ) {
     try {
       const merchant = await this.merchantModel.findOne({
-        where: { id: merchantId, ownerId: userId },
+        where: { id: merchantId },
       });
 
       if (!merchant) throw new Error('Merchant not found');
@@ -329,5 +314,11 @@ export class MerchantService {
     } catch (error) {
       throw new error();
     }
+  }
+
+  async findMerchantsByOwner(ownerId: number) {
+    return this.merchantModel.findOne({
+      where: { ownerId },
+    });
   }
 }

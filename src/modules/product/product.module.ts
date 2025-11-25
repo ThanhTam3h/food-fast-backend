@@ -10,6 +10,7 @@ import {
 import { CategoryModule } from '../category/category.module';
 import { ProductController } from './product.controller';
 import { ProductService } from './product.service';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   controllers: [ProductController],
@@ -23,6 +24,7 @@ import { ProductService } from './product.service';
       ProductToppingGroup,
     ]),
     CategoryModule,
+    CloudinaryModule
   ],
   exports: [ProductService]
 })

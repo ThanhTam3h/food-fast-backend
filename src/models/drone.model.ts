@@ -20,6 +20,7 @@ export enum DroneStatus {
   DROPPING_OFF = 'DROPPING_OFF',
   RETURNING_TO_HUB = 'RETURNING_TO_HUB',
   EMERGENCY_LANDING = 'EMERGENCY_LANDING',
+  LANDING_AT_HUB = 'LANDING_AT_HUB',
 }
 
 @Table
@@ -43,10 +44,6 @@ export class Drone extends Model<Drone> {
 
   @BelongsTo(() => DroneHub)
   declare hub: DroneHub;
-
-  @ForeignKey(() => Order)
-  @Column({ allowNull: true, type: DataType.INTEGER })
-  declare orderId: number;
 
   @HasOne(() => Order)
   declare order: Order;

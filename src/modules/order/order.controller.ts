@@ -10,6 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
+import { Public } from 'src/common/decorators/global-guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Order, PaymentMethod } from 'src/models/order.model';
 import { StripeService } from '../stripe/stripe.service';
@@ -89,7 +90,6 @@ export class OrderController {
   })
   @Patch('update/:orderNumber')
   @ApiBearerAuth('access-token')
-  // @Roles('merchant', 'admin')
   async updateOrderInfo(
     @Req() req: any,
     @Param('orderNumber') orderNumber: string,
@@ -123,9 +123,25 @@ export class OrderController {
     );
   }
 
+  @Public()
+  @Get('available-drones')
+  getAvailableDrones() {
+    return this.orderService.getAvailableDrones();
+  }
+
+  @Get('user/')
+  @ApiBearerAuth('access-token')
+  async getOrderItemsByUserId(@Req() req: any) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new BadRequestException('Missing user ID');
+    }
+
+    return this.orderService.getOrderItemsByUserId(+userId);
+  }
+
   @Get('/:orderNumber')
-  // @ApiBearerAuth('access-token')
-  // @Roles('merchant', 'admin')
+  @ApiBearerAuth('access-token')
   async getOrderItemsByOrderId(
     @Req() req: any,
     @Param('orderNumber') orderNumber: string,
@@ -135,5 +151,20 @@ export class OrderController {
       throw new BadRequestException('Missing user ID');
     }
     return this.orderService.getOrderItemsByOrderId(orderNumber);
+  }
+
+  @Public()
+  @Post(':orderNumber/assign-drone')
+  async assignDrone(
+    @Param('orderNumber') orderNumber: string,
+    @Body('droneId') droneId: number,
+  ) {
+    return this.orderService.assignDroneToOrder(orderNumber, droneId);
+  }
+
+  @Public()
+  @Get()
+  async getAllOrders() {
+    return this.orderService.findAll(); // bạn thêm method này
   }
 }

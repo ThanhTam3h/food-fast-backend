@@ -29,6 +29,16 @@ export class MerchantController {
   }
 
   @Public()
+  @Get('nearby')
+  async getNearby(
+    @Query('lat') lat: number,
+    @Query('lng') lng: number,
+    @Query('radius') radius: number = 100,
+  ) {
+    return this.merchantService.findNearby(lat, lng, radius);
+  }
+
+  @Public()
   @Post()
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -55,15 +65,18 @@ export class MerchantController {
   }
 
   @Public()
-  @Get('nearby')
-  async getNearby(
-    @Query('lat') lat: number,
-    @Query('lng') lng: number,
-    @Query('radius') radius: number = 100,
-  ) {
-    return this.merchantService.findNearby(lat, lng, radius);
+  @Get('/:ownerId')
+  async findMerchant(@Param('ownerId') ownerId: number) {
+    return await this.merchantService.findMerchantsByOwner(ownerId);
   }
 
+  @Public()
+  @Get('/merchant/:merchantId')
+  async findOneMerchant(@Param('merchantId') merchantId: number) {
+    return await this.merchantService.findOne(merchantId);
+  }
+
+  @Public()
   @Patch(':id')
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -76,7 +89,6 @@ export class MerchantController {
   )
   async update(
     @Param('id') id: number,
-    @Req() req: any,
     @Body() updateMerchantDto: UpdateMerchantDto,
     @UploadedFiles()
     files: {
@@ -84,19 +96,12 @@ export class MerchantController {
       BACKGROUND?: Express.Multer.File[];
     },
   ) {
-    const userId = req.user.id;
+
     return this.merchantService.updateMerchant(
       id,
-      userId,
       updateMerchantDto,
       files,
     );
-  }
-
-  @Public()
-  @Get(':id')
-  async findMerchant(@Param('id') id: number) {
-    return await this.merchantService.findOne(id);
   }
 
   @Public()

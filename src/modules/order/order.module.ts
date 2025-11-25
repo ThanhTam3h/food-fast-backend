@@ -2,6 +2,8 @@ import { forwardRef, Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import {
   Address,
+  Drone,
+  DroneHub,
   Merchant,
   Order,
   OrderItem,
@@ -28,6 +30,8 @@ import { WebsocketModule } from '../websocket/websocket.module';
       Topping,
       OrderItemTopping,
       User,
+      Drone,
+      DroneHub,
       Merchant
     ]),
     AddressModule,

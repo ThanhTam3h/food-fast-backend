@@ -22,7 +22,7 @@ export class Address extends Model<Address> {
   declare isDefault: boolean;
 
   @ForeignKey(() => User)
-  @Column({ allowNull: false, type: DataType.INTEGER })
+  @Column({ allowNull: true, type: DataType.INTEGER })
   declare userId: number;
 
   @BelongsTo(() => User)
