@@ -62,29 +62,19 @@ import { WebsocketModule } from './modules/websocket/websocket.module';
       }),
       global: true,
     }),
-    MailerModule.forRootAsync({
-  imports: [ConfigModule],
-  inject: [ConfigService],
-  useFactory: (config: ConfigService) => ({
-    transport: {
-      service: 'Mailersend',   // KHÔNG dùng host/port SMTP nữa
-      auth: {
-        user: 'api',           // luôn là 'api'
-        pass: config.get('MAILERSEND_API_KEY'),
-      },
-    },
-    defaults: {
-      from: `"FastFood" <${config.get('MAIL_FROM')}>`,
-    },
-    template: {
-      dir: join(process.cwd(), 'src/templates/email'),
-      adapter: new HandlebarsAdapter(),
-      options: {
-        strict: true,
-      },
-    },
-  }),
-}),
+    MailerModule.forRoot({
+  transport: {
+    jsonTransport: true, // không dùng SMTP nữa
+  },
+  defaults: {
+    from: '"FastFood" <no-reply@yourdomain.com>',
+  },
+  template: {
+    dir: join(process.cwd(), 'src/templates/email'),
+    adapter: new HandlebarsAdapter(),
+    options: { strict: true },
+  },
+});
 
 
     ProductModule,

@@ -9,14 +9,14 @@ import { createOtpExpiry, generateOtp, isOtpExpired } from 'src/common/helpers/f
 import { Merchant, User } from 'src/models';
 import { UserService } from '../user/user.service';
 import { VerifyOtpDTO } from './dto/verifyOTP.dto';
-import { MailerService } from '@nestjs-modules/mailer';
-
+//import { MailerService } from '@nestjs-modules/mailer';
+import { EmailService } from '../email/email.service';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly mailerService: MailerService,
+    private readonly emailService: EmailService,
     @InjectModel(User) private readonly userModel: typeof User,
   ) {}
 
@@ -85,21 +85,7 @@ export class AuthService {
     );
 
     // Gửi email OTP mới
-    await this.mailerService.sendMail({
-      to: email,
-      subject: 'Resend OTP - Xác minh tài khoản của bạn',
-      template: 'verify-otp',
-      context: {
-        appName: 'Fastfood delivery',
-        userEmail: email,
-        otpCode: newOtp,
-        expiryTime: newExpiry,
-        supportEmail: 'support@naomieats.com',
-        companyAddress: '123 Nguyễn Trãi, TP.HCM',
-        companyPhone: '0123 456 789',
-        currentYear: new Date().getFullYear(),
-      },
-    });
+    await this.emailService.sendOtpEmail(email, newOtp);
 
     return {
       success: true,
