@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsDateString,
   IsNotEmpty,
@@ -60,6 +60,17 @@ export class CreateMerchantDto {
     type: () => TemporaryAddressDto,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    // FIX: Nếu nhận được chuỗi JSON từ FormData, hãy parse nó thành Object
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        return value;
+      }
+    }
+    return value;
+  })
   @ValidateNested()
   @Type(() => TemporaryAddressDto)
   temporaryAddress: TemporaryAddressDto;
