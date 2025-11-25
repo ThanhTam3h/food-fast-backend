@@ -91,7 +91,7 @@ export class UserService {
 
     const isCorrectPassword = bcrypt.compareSync(
       password,
-      alreadyExist.password,
+      alreadyExist.password ?? '',
     );
 
     if (!isCorrectPassword) {
@@ -198,7 +198,7 @@ export class UserService {
       });
 
       await t.commit();
-      
+
       return {
         message: `OTP sent to ${user.email}`,
         data: user,

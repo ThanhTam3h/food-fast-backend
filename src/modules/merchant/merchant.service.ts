@@ -87,7 +87,7 @@ if (!user) {
       email: createMerchantDto.representativeEmail,
       password: null, // không dùng password để login
       provider: 'MERCHANT_REGISTER',
-    },
+    }as any,
     { transaction: t },
   );
 
