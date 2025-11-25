@@ -67,16 +67,16 @@ import { WebsocketModule } from './modules/websocket/websocket.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         transport: {
-          host: 'smtp.gmail.com',
-          port: 465,
+          host: process.env.MAIL_HOST,
+          port: Number(process.env.MAIL_PORT),
           secure: true,
           auth: {
-            user: configService.get<string>('MAIL_USER'),
-            pass: configService.get<string>('MAIL_PASSWORD'),
+            user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASSWORD,
           },
         },
         defaults: {
-          from: '"No Reply" <no-reply@localhost>',
+          from: `Your App <${process.env.MAIL_FROM}>`,
         },
         template: {
           dir: join(process.cwd(), 'src/templates/email'),
