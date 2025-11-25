@@ -96,7 +96,7 @@ if (!user) {
     {
       userId: user.id,
       roleId: 2, // 1 = PARTNER (bạn kiểm tra trong database)
-    },
+    }, 
     { transaction: t },
   );
 }
