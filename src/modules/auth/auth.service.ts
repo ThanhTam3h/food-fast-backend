@@ -88,7 +88,7 @@ export class AuthService {
     await this.mailerService.sendMail({
       to: email,
       subject: 'Resend OTP - Xác minh tài khoản của bạn',
-      template: './verify-otp',
+      template: 'verify-otp',
       context: {
         appName: 'Fastfood delivery',
         userEmail: email,

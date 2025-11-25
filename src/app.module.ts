@@ -65,21 +65,16 @@ import { WebsocketModule } from './modules/websocket/websocket.module';
     MailerModule.forRootAsync({
   imports: [ConfigModule],
   inject: [ConfigService],
-  useFactory: (configService: ConfigService) => ({
+  useFactory: (config: ConfigService) => ({
     transport: {
-      host: configService.get<string>('MAIL_HOST'),
-      port: configService.get<number>('MAIL_PORT'),
-      secure: false, // bắt buộc false khi dùng port 587
+      service: 'Mailersend',   // KHÔNG dùng host/port SMTP nữa
       auth: {
-        user: configService.get<string>('MAIL_USER'),
-        pass: configService.get<string>('MAIL_PASSWORD'),
-      },
-      tls: {
-        rejectUnauthorized: false, // RẤT QUAN TRỌNG - Railway bắt buộc
+        user: 'api',           // luôn là 'api'
+        pass: config.get('MAILERSEND_API_KEY'),
       },
     },
     defaults: {
-      from: `"FastFood" <${configService.get('MAIL_FROM')}>`,
+      from: `"FastFood" <${config.get('MAIL_FROM')}>`,
     },
     template: {
       dir: join(process.cwd(), 'src/templates/email'),
@@ -90,6 +85,7 @@ import { WebsocketModule } from './modules/websocket/websocket.module';
     },
   }),
 }),
+
 
     ProductModule,
     ToppingModule,
