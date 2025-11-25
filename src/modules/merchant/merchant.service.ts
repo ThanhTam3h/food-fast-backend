@@ -92,7 +92,7 @@ if (!user) {
   );
 
   // 2. Tạo role PARTNER trong bảng UserRoles
-  await this.sequelize.models.UserRoles.create(
+  await this.sequelize.models.UserRoles.create( 
     {
       userId: user.id,
       roleId: 2, // 1 = PARTNER (bạn kiểm tra trong database)
