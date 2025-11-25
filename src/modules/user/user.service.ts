@@ -137,7 +137,34 @@ export class UserService {
       } else {
         const alreadyExist = await this.findByEmail(email);
         if (alreadyExist) {
-          throw new BadRequestException('Email is already registerd');
+          if (!alreadyExist.password) {
+    const salt = await bcrypt.genSalt();
+    await this.userModel.update(
+      { password: bcrypt.hashSync(password, salt) },
+      { where: { email }, transaction: t }
+    );
+
+    // gán role user đăng ký
+    const roleEntity = await this.roleModel.findOne({ where: { name: role } });
+    await this.userRoleModel.create(
+      { userId: alreadyExist.id, roleId: roleEntity.id },
+      { transaction: t }
+    );
+
+    // nếu role là merchant → update ownerId vào bảng merchant
+    if (role === 'merchant') {
+      await this.merchantModel.update(
+        { ownerId: alreadyExist.id },
+        { where: { representativeEmail: email }, transaction: t }
+      );
+    }
+
+    await t.commit();
+    return { message: 'Password set successfully', data: alreadyExist };
+  }
+
+  // nếu đã có password → chặn, account đã đầy đủ
+  throw new BadRequestException('Email is already registered');
         }
       }
 
