@@ -63,30 +63,34 @@ import { WebsocketModule } from './modules/websocket/websocket.module';
       global: true,
     }),
     MailerModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        transport: {
-          host: configService.get<string>('MAIL_HOST'),
-  port: configService.get<number>('MAIL_PORT'),
-  secure: false,   // nếu port 587
-  auth: {
-    user: configService.get<string>('MAIL_USER'),
-    pass: configService.get<string>('MAIL_PASSWORD'),
-  },
-},
-defaults: {
-  from: `"FastFood" <${configService.get('MAIL_FROM')}>`,
-        },
-        template: {
-          dir: join(process.cwd(), 'src/templates/email'),
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
-          },
-        },
-      }),
-    }),
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (configService: ConfigService) => ({
+    transport: {
+      host: configService.get<string>('MAIL_HOST'),
+      port: configService.get<number>('MAIL_PORT'),
+      secure: false, // bắt buộc false khi dùng port 587
+      auth: {
+        user: configService.get<string>('MAIL_USER'),
+        pass: configService.get<string>('MAIL_PASSWORD'),
+      },
+      tls: {
+        rejectUnauthorized: false, // RẤT QUAN TRỌNG - Railway bắt buộc
+      },
+    },
+    defaults: {
+      from: `"FastFood" <${configService.get('MAIL_FROM')}>`,
+    },
+    template: {
+      dir: join(process.cwd(), 'src/templates/email'),
+      adapter: new HandlebarsAdapter(),
+      options: {
+        strict: true,
+      },
+    },
+  }),
+})
+
     ProductModule,
     ToppingModule,
     CartModule,
