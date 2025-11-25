@@ -179,7 +179,7 @@ export class UserService {
           { where: { representativeEmail: email }, transaction: t },
         );
       }
-      await t.commit();
+      
 
       await this.mailerService.sendMail({
         to: email,
@@ -197,6 +197,8 @@ export class UserService {
         },
       });
 
+      await t.commit();
+      
       return {
         message: `OTP sent to ${user.email}`,
         data: user,
