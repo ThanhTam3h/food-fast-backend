@@ -37,6 +37,7 @@ export class CreateMerchantDto {
 
   @ApiProperty({ description: 'Email người đại diện' })
   @IsString()
+  @IsNotEmpty()
   @IsOptional()
   representativeEmail: string;
 
@@ -59,7 +60,9 @@ export class CreateMerchantDto {
     required: false,
     type: () => TemporaryAddressDto,
   })
-  @IsOptional()
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => TemporaryAddressDto)
   @Transform(({ value }) => {
     // FIX: Nếu nhận được chuỗi JSON từ FormData, hãy parse nó thành Object
     if (typeof value === 'string') {
@@ -71,8 +74,7 @@ export class CreateMerchantDto {
     }
     return value;
   })
-  @ValidateNested()
-  @Type(() => TemporaryAddressDto)
+
   temporaryAddress: TemporaryAddressDto;
 
   @ApiProperty({ description: 'Mô hình kinh doanh (công ty/HKD/cá nhân)' })

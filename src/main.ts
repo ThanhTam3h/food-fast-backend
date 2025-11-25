@@ -11,7 +11,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
    app.enableCors({
-    origin: ['https://food-fast-frontend.vercel.app','http://localhost:3001'], // URL mặc định Vite
+    origin: true, // URL mặc định Vite
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
